@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段4 完成——固件已编译成功并下载到本地 firmware/，SHA256 校验通过。
-> **Next**：阶段5——刷写验证（先 uboot 刷 factory，再 OpenWrt 页面刷 sysupgrade），核对后台/WiFi/IPv6/插件。
-> **Blocker**：无。
+> **Stopped here**：阶段5 刷写后发现固件启动后崩溃（bootloop），正在定位根因。
+> **Next**：确认崩溃根因（抓 boot 日志或保守重建），修复后重刷；先用 uboot 恢复设备。
+> **Blocker**：新固件刷入后设备能起内核（ARP 应答 192.168.100.1）但 userland 起不来（SSH/LuCI 无响应），ping 时通时断。
 
 ---
 
@@ -40,6 +40,15 @@
 - SHA256 本地已核对：sysupgrade=4bdf8bdd…0381f，factory=6a582b9e…3570a，
   initramfs=fb79c669…07eaf（与 VPS 的 sha256sums 一致）。
 
+## 阶段5 问题：刷入后 bootloop（待解决）
+- 现象：OpenWrt sysupgrade 刷入后，电脑进不去后台。本机排查：
+  - 有线网卡已设静态 192.168.100.10（原本 DHCP）。
+  - ARP 能解析 192.168.100.1 -> 50-33-f0-e0-1c-e4（说明固件已起、LAN IP 已变成 192.168.100.1）。
+  - 但 ping/SSH(22)/HTTP(80,443) 全部无响应；仅一次抓到 4 个 ping 应答后即超时。
+  - 结论：内核起来了，但 userland（dropbear/LuCI）没起来就挂/崩溃，典型 bootloop。
+- 已排除：root 密码就是 root（my-default-settings 的 99-default-settings 里 passwd root=root）。
+- 待查：抓 dmesg/logread 定位崩溃点；备选保守重建（先去 passwall/openclash/自定义 uci-defaults 二分）。
+
 ## 已解决的构建问题（阶段3）
 - 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
   jcg,q30-pro（使其走 nand_do_upgrade，与参考机一致）；其余 2 处 hunk 与 jcg 无关（cudy/aigo/umi）。
@@ -65,6 +74,7 @@
 → 4 首次编译（完成）→ 5 刷写验证 → 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-20] 阶段5：发现刷入后 bootloop（内核起、userland 挂），定位中。
 - [2026-08-20] 阶段4：编译成功，产出 sysupgrade/factory/initramfs 三个镜像，
   下载到本地 firmware/ 并核对 SHA256。
 - [2026-08-19] 阶段4：修复 tools/tar 报错（root 需 FORCE_UNSAFE_CONFIGURE=1），重启编译并进入宿主工具链阶段。

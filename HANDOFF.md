@@ -24,11 +24,12 @@
 - 构建脚本已上传：/root/q30-build/build-kwrt.sh（支持 PREPARE_ONLY=1 只准备不编译）。
 
 ## 编译监控（阶段4）
-- 启动：cd /root/q30-build/openwrt && setsid make -j8 > /root/q30-build/build.log 2>&1 < /dev/null &
+- 启动：cd /root/q30-build/openwrt && export FORCE_UNSAFE_CONFIGURE=1 && setsid make -j8 > /root/q30-build/build.log 2>&1 < /dev/null &
 - 查看进度：tail -30 /root/q30-build/build.log
 - 查看是否还在跑：ps aux | grep make | grep -v grep
 - 产物目录：/root/q30-build/openwrt/bin/targets/mediatek/filogic/
 - 预期耗时：单 profile 约 1–2+ 小时（tools → toolchain → kernel → packages → image）。
+- 注意：必须以 FORCE_UNSAFE_CONFIGURE=1 编译（root 身份下 tools/tar 等 configure 会拒绝）。
 
 ## 已解决的构建问题（阶段3）
 - 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
@@ -55,6 +56,7 @@
 → 4 首次编译 → 5 刷写验证 → 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-19] 阶段4：修复 tools/tar 报错（root 需 FORCE_UNSAFE_CONFIGURE=1），重启编译并进入宿主工具链阶段。
 - [2026-08-19] 阶段4 进行中：make -j8 后台编译已启动并通过预检，进入 tools/compile。
 - [2026-08-19] 阶段3：解决补丁冲突（jcg 走 nand_do_upgrade）、补建 kiddin9 软链接、
   配置单 profile + argon/passwall/openclash、files 覆盖（LAN/WiFi/关IPv6/clash_meta 预置）、

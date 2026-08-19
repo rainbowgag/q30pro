@@ -94,6 +94,7 @@ if [ "${PREPARE_ONLY:-0}" = "1" ]; then
   exit 0
 fi
 make defconfig
+export FORCE_UNSAFE_CONFIGURE=1
 make -j"$JOBS"
 
 echo "完成。产物：openwrt/bin/targets/mediatek/filogic/"

@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段3 完成——固件配置就绪：单 profile、argon/passwall/openclash、files 覆盖、make defconfig 通过。
-> **Next**：阶段4——首次编译（make），产出 jcg_q30-pro 的 sysupgrade/factory 镜像。
+> **Stopped here**：阶段4 编译已启动（后台 make -j8，日志 /root/q30-build/build.log，当前在 tools/compile 阶段）。
+> **Next**：等待编译完成，检查 jcg_q30-pro 的 sysupgrade/factory 镜像，处理可能的报错。
 > **Blocker**：无。
 
 ---
@@ -22,6 +22,13 @@
 - 构建根：/root/q30-build（Kwrt 检出，含 devices/）；源码树 /root/q30-build/openwrt。
 - 已跑通 feeds：packages / luci / routing / video / kiddin9（814 包）。
 - 构建脚本已上传：/root/q30-build/build-kwrt.sh（支持 PREPARE_ONLY=1 只准备不编译）。
+
+## 编译监控（阶段4）
+- 启动：cd /root/q30-build/openwrt && setsid make -j8 > /root/q30-build/build.log 2>&1 < /dev/null &
+- 查看进度：tail -30 /root/q30-build/build.log
+- 查看是否还在跑：ps aux | grep make | grep -v grep
+- 产物目录：/root/q30-build/openwrt/bin/targets/mediatek/filogic/
+- 预期耗时：单 profile 约 1–2+ 小时（tools → toolchain → kernel → packages → image）。
 
 ## 已解决的构建问题（阶段3）
 - 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
@@ -48,6 +55,7 @@
 → 4 首次编译 → 5 刷写验证 → 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-19] 阶段4 进行中：make -j8 后台编译已启动并通过预检，进入 tools/compile。
 - [2026-08-19] 阶段3：解决补丁冲突（jcg 走 nand_do_upgrade）、补建 kiddin9 软链接、
   配置单 profile + argon/passwall/openclash、files 覆盖（LAN/WiFi/关IPv6/clash_meta 预置）、
   make defconfig 通过；保存 .config 快照到 configs/diffconfig/jcg-q30-pro.config。

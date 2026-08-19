@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段4 编译已启动（后台 make -j8，日志 /root/q30-build/build.log，当前在 tools/compile 阶段）。
-> **Next**：等待编译完成，检查 jcg_q30-pro 的 sysupgrade/factory 镜像，处理可能的报错。
+> **Stopped here**：阶段4 完成——固件已编译成功并下载到本地 firmware/，SHA256 校验通过。
+> **Next**：阶段5——刷写验证（先 uboot 刷 factory，再 OpenWrt 页面刷 sysupgrade），核对后台/WiFi/IPv6/插件。
 > **Blocker**：无。
 
 ---
@@ -31,6 +31,15 @@
 - 预期耗时：单 profile 约 1–2+ 小时（tools → toolchain → kernel → packages → image）。
 - 注意：必须以 FORCE_UNSAFE_CONFIGURE=1 编译（root 身份下 tools/tar 等 configure 会拒绝）。
 
+## 固件产物（阶段4 完成，已校验）
+- VPS 路径：/root/q30-build/openwrt/bin/targets/mediatek/filogic/
+- 本地路径：firmware/（已 gitignore）
+- kwrt-mediatek-filogic-jcg_q30-pro-squashfs-sysupgrade.bin（52.9MB）→ OpenWrt 页面升级
+- kwrt-mediatek-filogic-jcg_q30-pro-squashfs-factory.bin（55.6MB）→ uboot 刷入
+- kwrt-mediatek-filogic-jcg_q30-pro-initramfs-kernel.bin（47.4MB）→ 救援/调试
+- SHA256 本地已核对：sysupgrade=4bdf8bdd…0381f，factory=6a582b9e…3570a，
+  initramfs=fb79c669…07eaf（与 VPS 的 sha256sums 一致）。
+
 ## 已解决的构建问题（阶段3）
 - 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
   jcg,q30-pro（使其走 nand_do_upgrade，与参考机一致）；其余 2 处 hunk 与 jcg 无关（cudy/aigo/umi）。
@@ -53,9 +62,11 @@
 
 ## 阶段计划（小步推进，每阶段一个会话）
 0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认（完成）→ 3 定制配置（完成）
-→ 4 首次编译 → 5 刷写验证 → 6 锁定更新 → 7 收尾交付
+→ 4 首次编译（完成）→ 5 刷写验证 → 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-20] 阶段4：编译成功，产出 sysupgrade/factory/initramfs 三个镜像，
+  下载到本地 firmware/ 并核对 SHA256。
 - [2026-08-19] 阶段4：修复 tools/tar 报错（root 需 FORCE_UNSAFE_CONFIGURE=1），重启编译并进入宿主工具链阶段。
 - [2026-08-19] 阶段4 进行中：make -j8 后台编译已启动并通过预检，进入 tools/compile。
 - [2026-08-19] 阶段3：解决补丁冲突（jcg 走 nand_do_upgrade）、补建 kiddin9 软链接、

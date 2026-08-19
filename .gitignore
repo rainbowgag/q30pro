@@ -1,0 +1,6 @@
+# 构建产物与本地临时文件
+*.bin
+*.img
+*.log
+.DS_Store
+Thumbs.db

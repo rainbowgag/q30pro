@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段1 完成——新 VPS 环境就绪（依赖/swap/源码/feeds 全部装好）。
-> **Next**：阶段2/3——采集参考机分区与 110M 方案，并修复 Kwrt 补丁与 openwrt-25.12 HEAD 的 3 处冲突。
-> **Blocker**：Kwrt 的 25-platform.patch 等对 openwrt-25.12 当前 HEAD（4a5c6b9, 2026-07-22）有 3 个 hunk 被拒，需固定源码版本或手工解决。
+> **Stopped here**：阶段2 完成——参考机信息已采集，110M 分区已确认（mtd4 ubi=0x6e80000，源自 09-jcg_q30-pro.patch）。
+> **Next**：阶段3——解决 25-platform.patch 的 3 处 hunk 冲突，并做定制（LAN/WiFi/IPv6/主题/插件/clash_meta 预置）。
+> **Blocker**：Kwrt 的 25-platform.patch 对 openwrt-25.12 HEAD（4a5c6b9）有 3 处 hunk 被拒：platform.sh、uboot-envtools/mediatek_filogic、11_fix_wifi_mac。
 
 ---
 
@@ -32,6 +32,7 @@
 ## 参考设备（已刷好固件，作为参照）
 - 后台地址：10.0.0.1
 - 用户名 / 密码：root / root
+- 采集结果：见 configs/reference/reference-device.md（分区表/已装包/现状-目标差异）
 
 ## 硬性需求备忘
 - 固件后台地址：192.168.100.1
@@ -42,10 +43,12 @@
 - 110M 分区，可在 uboot 与 sysupgrade 升级
 
 ## 阶段计划（小步推进，每阶段一个会话）
-0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认 → 3 定制配置
+0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认（完成）→ 3 定制配置
 → 4 首次编译 → 5 刷写验证 → 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-19] 阶段2：采集参考机（10.0.0.1）分区/配置/已装包；确认 110M 分区
+  = mtd4 ubi 0x6e80000，由 09-jcg_q30-pro.patch 定义；落盘 configs/reference/。
 - [2026-08-19] 阶段1：新 VPS 154.36.168.118 环境就绪（依赖/swap/克隆/feeds 通过），
   并定位 Kwrt 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突。
 - [2026-08-19] 阶段1：切换到新 VPS 154.36.168.118（114G 可用），连通并采集主机信息。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""在 VPS 上执行命令并流式回显。凭据从环境变量读取，不在仓库中硬编码。
+"""在 VPS/路由器上执行命令并流式回显。凭据从环境变量读取，不在仓库中硬编码。
 用法（PowerShell）：
   $env:VPS_PASS='...'; python scripts/vps.py 'uptime'
 可用环境变量：
@@ -18,26 +18,40 @@ user = os.environ.get("VPS_USER", "root")
 pwd = os.environ.get("VPS_PASS", "")
 cmd = sys.argv[1] if len(sys.argv) > 1 else "echo ok"
 
-client = paramiko.SSHClient()
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect(
-    hostname=host,
-    port=port,
-    username=user,
-    password=pwd,
-    timeout=30,
-    allow_agent=False,
-    look_for_keys=False,
-)
 
-# 用 PTY 让 stdout/stderr 合并并逐行流式输出，避免长命令期间无回显。
-_stdin, stdout, _stderr = client.exec_command(cmd, timeout=None, get_pty=True)
-_stdin.close()
+def main():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(
+        hostname=host,
+        port=port,
+        username=user,
+        password=pwd,
+        timeout=30,
+        allow_agent=False,
+        look_for_keys=False,
+    )
+    # 用 PTY 让 stdout/stderr 合并并逐行流式输出，避免长命令期间无回显。
+    _stdin, stdout, _stderr = client.exec_command(cmd, timeout=None, get_pty=True)
 
-for line in iter(stdout.readline, ""):
-    sys.stdout.write(line)
-    sys.stdout.flush()
+    while True:
+        line = stdout.readline()
+        if not line:
+            break
+        if isinstance(line, bytes):
+            line = line.decode("utf-8", "replace")
+        sys.stdout.write(line)
+        sys.stdout.flush()
 
-rc = stdout.channel.recv_exit_status()
-client.close()
-sys.exit(rc)
+    rc = stdout.channel.recv_exit_status()
+    client.close()
+    return rc
+
+
+if __name__ == "__main__":
+    try:
+        rc = main()
+    except Exception as exc:
+        print("VPS-ERROR:", exc, file=sys.stderr)
+        rc = 1
+    sys.exit(rc)

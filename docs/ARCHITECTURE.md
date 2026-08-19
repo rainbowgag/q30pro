@@ -35,9 +35,9 @@
 - 定制全部落盘（diffconfig / files / patches）以保证可复现
 
 ## 必须先明确的（阶段2 冻结）
-- [ ] 设备实际分区布局（/proc/mtd、ubinfo）与 uboot 类型：确认「110M UBI 分区」方案
-- [ ] 110M 分区下 uboot / sysupgrade 的正确刷入步骤
-- [ ] 参考机现有 openclash / passwall / wifi / 网络配置（作为默认值参照）
+- [x] 设备实际分区布局：mtd4 ubi = 0x6e80000（110.5M），由 09-jcg_q30-pro.patch 定义
+- [ ] 110M 分区下 uboot / sysupgrade 的正确刷入步骤（fip 已放开 read-only）
+- [x] 参考机现有 openclash / passwall / wifi / 网络配置（见 configs/reference/reference-device.md）
 - [ ] OpenClash meta 内核在 op-packages feed 中的包名，及「禁止自更新」的锁定方式
 
 ## 固件硬性需求（验收标准）

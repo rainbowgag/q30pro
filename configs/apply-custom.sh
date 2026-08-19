@@ -1,0 +1,31 @@
+#!/bin/bash
+# 本项目固件定制脚本。在 openwrt 源码目录内执行（cwd=openwrt，configs 位于 ../configs）。
+# 时机：Kwrt 的 devices/common/diy.sh + 目标 diy.sh + patches 之后、make defconfig 之前。
+set -e
+
+# 0) 确保 kiddin9 feed 软链接存在（Kwrt 的 feeds install 可能漏建，导致包不进 Kconfig）
+mkdir -p package/feeds/kiddin9
+for d in feeds/kiddin9/*/; do
+  [ -f "$d/Makefile" ] || continue
+  name=$(basename "$d")
+  case "$name" in
+    zabbix-ssl|zabbix-extra-mac80211) continue ;;
+  esac
+  ln -sfn "../../../feeds/kiddin9/$name" "package/feeds/kiddin9/$name"
+done
+
+# 1) 修复 jcg,q30-pro 升级路径：与参考机一致，走 nand_do_upgrade（默认分支）
+sed -i '/jcg,q30-pro/d' target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
+
+# 2) 追加本项目 .config（单 profile + 主题/插件）
+echo >> .config
+cat ../configs/custom.config >> .config
+# 覆盖 ALL_PROFILES：common/.config 默认=y，单 profile 必须为 n
+sed -i 's/^CONFIG_TARGET_ALL_PROFILES=.*/CONFIG_TARGET_ALL_PROFILES=n/' .config
+
+# 3) files/ 覆盖（uci-defaults 首次启动设置 LAN/WiFi/关 IPv6）
+mkdir -p files
+cp -r ../configs/files/. files/
+chmod +x files/etc/uci-defaults/99-jcg-q30-defaults files/etc/openclash/core/clash_meta
+
+echo "apply-custom done"

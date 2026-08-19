@@ -38,7 +38,13 @@
 - [x] 设备实际分区布局：mtd4 ubi = 0x6e80000（110.5M），由 09-jcg_q30-pro.patch 定义
 - [ ] 110M 分区下 uboot / sysupgrade 的正确刷入步骤（fip 已放开 read-only）
 - [x] 参考机现有 openclash / passwall / wifi / 网络配置（见 configs/reference/reference-device.md）
-- [ ] OpenClash meta 内核在 op-packages feed 中的包名，及「禁止自更新」的锁定方式
+- [x] OpenClash meta 内核：由 openclash 运行时下载（非 ipk 提供），我们通过 files/ 预置 clash_meta；锁自更新在阶段6 落地
+
+## 定制产物（阶段3 已建立）
+- configs/custom.config：单 profile + 主题/插件（argon/passwall/openclash）
+- configs/apply-custom.sh：VPS 端定制脚本（补丁修复 + kiddin9 软链接 + .config + files 覆盖）
+- configs/files/etc/uci-defaults/99-jcg-q30-defaults：首次启动设 LAN=192.168.100.1、关 IPv6、5G AA_5G/asd12345、2.4G 关
+- configs/files/etc/openclash/core/clash_meta：预置 Meta 内核（约 10MB，gitignore，从参考机取得）
 
 ## 固件硬性需求（验收标准）
 - 后台 192.168.100.1；默认关闭 IPv6

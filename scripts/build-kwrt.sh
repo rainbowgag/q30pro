@@ -83,8 +83,10 @@ cp -rn devices/common/patches "devices/$TARGET/"
 find "devices/$TARGET/patches" -maxdepth 1 -type f -name '*.revert.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "patch -d './' -R --no-backup-if-mismatch -p1 -F 1 -i '%'"
 find "devices/$TARGET/patches" -maxdepth 1 -type f -name '*.patch' ! -name '*.revert.patch' ! -name '*.bin.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "patch -d './' --no-backup-if-mismatch -p1 -F 1 -i '%'"
 
-# 8) 本项目定制（阶段3 在此插入：单 profile、LAN=192.168.100.1、WiFi、关 IPv6、主题/插件）
-# bash "$BUILD_ROOT/configs/apply-custom.sh"
+# 8) 本项目定制（单 profile、LAN=192.168.100.1、WiFi、关 IPv6、主题/插件）
+if [ -f "$BUILD_ROOT/configs/apply-custom.sh" ]; then
+  bash "$BUILD_ROOT/configs/apply-custom.sh"
+fi
 
 # 9) 构建（PREPARE_ONLY=1 时只做环境/feeds 准备，不编译）
 if [ "${PREPARE_ONLY:-0}" = "1" ]; then

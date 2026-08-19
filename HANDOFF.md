@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段2 完成——参考机信息已采集，110M 分区已确认（mtd4 ubi=0x6e80000，源自 09-jcg_q30-pro.patch）。
-> **Next**：阶段3——解决 25-platform.patch 的 3 处 hunk 冲突，并做定制（LAN/WiFi/IPv6/主题/插件/clash_meta 预置）。
-> **Blocker**：Kwrt 的 25-platform.patch 对 openwrt-25.12 HEAD（4a5c6b9）有 3 处 hunk 被拒：platform.sh、uboot-envtools/mediatek_filogic、11_fix_wifi_mac。
+> **Stopped here**：阶段3 完成——固件配置就绪：单 profile、argon/passwall/openclash、files 覆盖、make defconfig 通过。
+> **Next**：阶段4——首次编译（make），产出 jcg_q30-pro 的 sysupgrade/factory 镜像。
+> **Blocker**：无。
 
 ---
 
@@ -23,11 +23,12 @@
 - 已跑通 feeds：packages / luci / routing / video / kiddin9（814 包）。
 - 构建脚本已上传：/root/q30-build/build-kwrt.sh（支持 PREPARE_ONLY=1 只准备不编译）。
 
-## 已知问题（阶段2/3 解决）
-- openwrt-25.12 分支 HEAD=4a5c6b9（2026-07-22）与 Kwrt 补丁基线漂移，
-  devices/mediatek_filogic/patches/25-platform.patch 有 3 个 hunk 被拒，产生 .rej：
-  platform.sh（sysupgrade）、uboot-envtools/mediatek_filogic、11_fix_wifi_mac。
-- 09-jcg_q30-pro.patch（设备专用补丁）已正常应用。
+## 已解决的构建问题（阶段3）
+- 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
+  jcg,q30-pro（使其走 nand_do_upgrade，与参考机一致）；其余 2 处 hunk 与 jcg 无关（cudy/aigo/umi）。
+- Kwrt 的 feeds install 漏建 package/feeds/kiddin9 软链接：apply-custom.sh 手动补建，
+  并排除 zabbix-ssl / zabbix-extra-mac80211（与 packages feed 的 user id 53 冲突）。
+- 定制产物已落盘：configs/custom.config、configs/apply-custom.sh、configs/files/、configs/diffconfig/。
 
 ## 参考设备（已刷好固件，作为参照）
 - 后台地址：10.0.0.1
@@ -43,10 +44,13 @@
 - 110M 分区，可在 uboot 与 sysupgrade 升级
 
 ## 阶段计划（小步推进，每阶段一个会话）
-0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认（完成）→ 3 定制配置
+0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认（完成）→ 3 定制配置（完成）
 → 4 首次编译 → 5 刷写验证 → 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-19] 阶段3：解决补丁冲突（jcg 走 nand_do_upgrade）、补建 kiddin9 软链接、
+  配置单 profile + argon/passwall/openclash、files 覆盖（LAN/WiFi/关IPv6/clash_meta 预置）、
+  make defconfig 通过；保存 .config 快照到 configs/diffconfig/jcg-q30-pro.config。
 - [2026-08-19] 阶段2：采集参考机（10.0.0.1）分区/配置/已装包；确认 110M 分区
   = mtd4 ubi 0x6e80000，由 09-jcg_q30-pro.patch 定义；落盘 configs/reference/。
 - [2026-08-19] 阶段1：新 VPS 154.36.168.118 环境就绪（依赖/swap/克隆/feeds 通过），

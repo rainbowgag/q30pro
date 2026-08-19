@@ -3,7 +3,7 @@
 用法（PowerShell）：
   $env:VPS_PASS='...'; python scripts/vps.py 'uptime'
 可用环境变量：
-  VPS_HOST (默认 154.12.50.97)
+  VPS_HOST (默认 154.36.168.118)
   VPS_PORT (默认 22)
   VPS_USER (默认 root)
   VPS_PASS (必填)
@@ -12,7 +12,7 @@ import os
 import sys
 import paramiko
 
-host = os.environ.get("VPS_HOST", "154.12.50.97")
+host = os.environ.get("VPS_HOST", "154.36.168.118")
 port = int(os.environ.get("VPS_PORT", "22"))
 user = os.environ.get("VPS_USER", "root")
 pwd = os.environ.get("VPS_PASS", "")

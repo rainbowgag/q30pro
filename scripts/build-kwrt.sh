@@ -6,7 +6,7 @@
 #   BUILD_ROOT/openwrt/       上游 openwrt/openwrt 源码
 set -euo pipefail
 
-BUILD_ROOT="${BUILD_ROOT:-/root/kwrt}"
+BUILD_ROOT="${BUILD_ROOT:-/root/q30-build}"
 KWRT_BRANCH="${KWRT_BRANCH:-25.12}"
 OPENWRT_BRANCH="${OPENWRT_BRANCH:-openwrt-25.12}"
 TARGET="${TARGET:-mediatek_filogic}"

@@ -8,6 +8,9 @@ set -euo pipefail
 
 BUILD_ROOT="${BUILD_ROOT:-/root/q30-build}"
 KWRT_BRANCH="${KWRT_BRANCH:-25.12}"
+# 注意：openwrt-25.12 是滚动分支，Kwrt 的 devices 补丁会随上游更新而漂移。
+# 2026-08 实测：HEAD=4a5c6b9 时 25-platform.patch 有 3 个 hunk 被拒。
+# 阶段2/3 需把 OPENWRT_BRANCH 固定到 Kwrt 补丁匹配的 commit/tag，或手工解决冲突。
 OPENWRT_BRANCH="${OPENWRT_BRANCH:-openwrt-25.12}"
 TARGET="${TARGET:-mediatek_filogic}"
 JOBS="${JOBS:-$(( $(nproc) + 1 ))}"
@@ -83,7 +86,11 @@ find "devices/$TARGET/patches" -maxdepth 1 -type f -name '*.patch' ! -name '*.re
 # 8) 本项目定制（阶段3 在此插入：单 profile、LAN=192.168.100.1、WiFi、关 IPv6、主题/插件）
 # bash "$BUILD_ROOT/configs/apply-custom.sh"
 
-# 9) 构建
+# 9) 构建（PREPARE_ONLY=1 时只做环境/feeds 准备，不编译）
+if [ "${PREPARE_ONLY:-0}" = "1" ]; then
+  echo "PREPARE_ONLY=1：准备完成，跳过 defconfig 与编译。"
+  exit 0
+fi
 make defconfig
 make -j"$JOBS"
 

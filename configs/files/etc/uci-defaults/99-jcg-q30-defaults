@@ -1,10 +1,10 @@
 #!/bin/sh
-# 首次启动执行一次：默认 LAN / 关闭 IPv6 / WiFi / OpenClash Meta 内核与锁定
+# 首次启动：LAN / 关闭 IPv6 / 双频 WiFi / OpenClash Meta 内核与锁定
 
 # LAN 地址
 uci set network.lan.ipaddr='192.168.100.1'
 
-# 关闭 IPv6：删 wan6、去 ip6assign/ula、禁 RA/DHCPv6/NDP
+# 关闭 IPv6
 uci -q delete network.wan6
 uci -q delete network.lan.ip6assign
 uci -q delete network.globals.ula_prefix
@@ -12,13 +12,19 @@ uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.ndp='disabled'
 
-# WiFi：2.4G 关闭，5G 设为 AA_5G / WPA2
-uci set wireless.radio0.disabled='1'
+# WiFi：启用 2.4G 与 5G
+uci set wireless.radio0.disabled='0'
+uci set wireless.radio1.disabled='0'
+# 2.4G
+uci set wireless.default_radio0.ssid='AA_2.4G'
+uci set wireless.default_radio0.encryption='psk2'
+uci set wireless.default_radio0.key='asd12345'
+# 5G
 uci set wireless.default_radio1.ssid='AA_5G'
 uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.key='asd12345'
 
-# OpenClash：Meta 内核 + 默认配置 + 锁定（禁止内核/插件自更新，默认不启动）
+# OpenClash：Meta 内核 + 默认配置 + 锁定（禁自更新，默认不启动）
 uci set openclash.config.core_version='linux-arm64'
 uci set openclash.config.config_path='/etc/openclash/config/config.yaml'
 uci set openclash.config.auto_update='0'

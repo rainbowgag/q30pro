@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5 定位根因中。已确认设备已用 stock 0715 恢复（后台 10.0.0.1 正常）；正在 VPS 做「保守重建」二分定位 bootloop。
-> **Next**：等最小化镜像（无 openclash/argon-config/files 覆盖）编译完成后刷入测试：若能启动→是本项目新增定制导致，再逐个加回；若仍 bootloop→锁定 openwrt-25.12 到 07.15 提交重建。
-> **Blocker**：原始 bootloop 现场已丢失（设备已恢复成 stock 0715）。要拿崩溃日志需 UART 串口或 uboot TFTP 引导 initramfs。
+> **Stopped here**：阶段5 根因定位。已完成「保守重建」并产出最小化镜像（无 openclash/argon-config/files），等待刷入测试二分。
+> **Next**：刷入最小化镜像测试：能启动→根因在本项目新增定制（openclash/argon-config/files），逐个加回；仍 bootloop→根因在 openwrt-25.12 分支/内核回归，锁定 07.15 提交重建。
+> **Blocker**：原始 bootloop 现场已丢失（设备已恢复成 stock 0715，10.0.0.1）。刷入最小化镜像属破坏性操作，需确认后执行（远程 sysupgrade 或用户 uboot/页面刷入）。
 
 ---
 
@@ -60,16 +60,20 @@
 - rootfs 差异（stock 0715 vs 我们 08.19）：
   - stock 有 passwall / argon / my-default-settings，但**没有 openclash、没有 luci-app-argon-config、没有我们的 files 覆盖**。
   - 我们额外加了：luci-app-openclash、luci-app-argon-config、files/ 覆盖（99-jcg-q30-defaults + clash_meta 10MB）。
-- 判断：bootloop 大概率来自「本项目新增定制」（openclash/files 覆盖）或「openwrt-25.12 分支在 6.12.94→6.12.103 的回归」。正在保守重建二分。
+- 判断：bootloop 大概率来自「本项目新增定制」（openclash/files 覆盖）或「openwrt-25.12 分支在 6.12.94→6.12.103 的回归」。
 
-## 保守重建（二分定位，进行中）
-- 脚本：scripts/build-minimal.sh（已上传 VPS /root/q30-build/build-minimal.sh）
+## 保守重建（二分定位，已完成）
+- 脚本：scripts/build-minimal.sh（已修复：保持 MULTI_PROFILE=y，仅移除 openclash/argon-config/files）
 - 做法：同一 openwrt-25.12 HEAD（4a5c6b9），单 profile jcg_q30-pro，
-  去掉 openclash / luci-app-argon-config / files 覆盖，保留 passwall+argon（与 stock 0715 一致）。
-- 备份：/root/q30-build/bisect/（.config.full.*.bak、files.full.*.bak、full/ 三镜像）
-- 日志：/root/q30-build/build-minimal.log
+  去掉 openclash / luci-app-argon-config / files 覆盖，保留 passwall+argon。
+- 已产出最小化镜像（本地 firmware/minimal-20260820-094048/）：
+  - initramfs-kernel.bin = 31.4MB
+  - squashfs-factory.bin = 37.5MB
+  - squashfs-sysupgrade.bin = 35.3MB
+- 已验证 rootfs：无 openclash、无 99-jcg-q30-defaults、无 clash_meta；保留 passwall/argon。
+- 备份：VPS /root/q30-build/bisect/（.config.full.*.bak、files.full.*.bak、full/ 三镜像）
 - 判定：
-  - 最小化镜像能启动 → 根因在本项目新增定制（openclash / files 覆盖），再逐个加回定位。
+  - 最小化镜像能启动 → 根因在本项目新增定制（openclash / argon-config / files 覆盖），再逐个加回定位。
   - 仍 bootloop → 根因在 openwrt-25.12 分支/内核回归，锁定到 07.15 提交重建。
 
 ## 已解决的构建问题（阶段3）
@@ -97,7 +101,8 @@
 → 4 首次编译（完成）→ 5 刷写验证（进行中）→ 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
-- [2026-08-20] 阶段5：确认设备已恢复为 stock 0715；拆包对比定位 bootloop 差异（DTB 相同，差异在内核版本与 rootfs 新增定制）；启动保守重建二分。
+- [2026-08-20] 阶段5：完成保守重建，产出最小化镜像（无 openclash/argon-config/files，保留 passwall/argon），待刷入测试二分。
+- [2026-08-20] 阶段5：确认设备已恢复为 stock 0715；拆包对比定位 bootloop 差异（DTB 相同，差异在内核版本与 rootfs 新增定制）。
 - [2026-08-20] 阶段5：发现刷入后 bootloop（内核起、userland 挂），定位中。
 - [2026-08-20] 阶段4：编译成功，产出 sysupgrade/factory/initramfs 三个镜像，
   下载到本地 firmware/ 并核对 SHA256。

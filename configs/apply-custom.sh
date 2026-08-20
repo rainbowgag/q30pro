@@ -33,6 +33,7 @@ chmod +x files/etc/uci-defaults/99-jcg-q30-defaults \
         files/etc/openclash/core/clash_meta \
         files/etc/init.d/openclash-editor-portal \
         files/etc/hotplug.d/iface/99-openclash-editor-portal \
+        files/etc/hotplug.d/ieee80211/30-jcg-wifi \
         files/usr/share/openclash-editor/backend.rb \
         files/usr/share/openclash-editor/portal-watch.sh \
         files/usr/share/openclash-editor/update.sh

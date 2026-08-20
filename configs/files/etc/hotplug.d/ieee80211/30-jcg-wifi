@@ -1,0 +1,23 @@
+#!/bin/sh
+# 无线默认设置：在 Kwrt 的 10-wifi-detect（会重新生成并禁用无线）之后重新应用
+[ "${ACTION}" = "add" ] || exit 0
+
+(
+    # 等 Kwrt 的 mywifi 完成（首次启动最多 30s；后续启动该标志已为 1 会立即继续）
+    for i in $(seq 1 30); do
+        [ "$(uci -q get base_config.@status[0].wifi)" = "1" ] && break
+        sleep 1
+    done
+
+    uci set wireless.radio0.disabled='0'
+    uci set wireless.radio1.disabled='0'
+    uci set wireless.default_radio0.ssid='AA_2.4G'
+    uci set wireless.default_radio0.encryption='psk2'
+    uci set wireless.default_radio0.key='asd12345'
+    uci set wireless.default_radio1.ssid='AA_5G'
+    uci set wireless.default_radio1.encryption='psk2'
+    uci set wireless.default_radio1.key='asd12345'
+    uci commit wireless
+    /sbin/wifi reload
+) &
+exit 0

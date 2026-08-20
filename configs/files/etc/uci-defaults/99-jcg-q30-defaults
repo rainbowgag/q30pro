@@ -13,7 +13,7 @@ uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.ndp='disabled'
 
-# WiFi：启用 2.4G 与 5G
+# WiFi：启用 2.4G 与 5G（最终以热插拔脚本为准，这里兜底首次启动）
 uci set wireless.radio0.disabled='0'
 uci set wireless.radio1.disabled='0'
 uci set wireless.default_radio0.ssid='AA_2.4G'
@@ -23,8 +23,9 @@ uci set wireless.default_radio1.ssid='AA_5G'
 uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.key='asd12345'
 
-# OpenClash：Meta 内核 + 默认配置 + 锁定（禁自更新，默认不启动）
+# OpenClash：Meta 内核 + 混合模式 + 默认配置 + 锁定（禁自更新，默认不启动）
 uci set openclash.config.core_version='linux-arm64'
+uci set openclash.config.en_mode='fake-ip-mix'
 uci set openclash.config.config_path='/etc/openclash/config/config.yaml'
 uci set openclash.config.auto_update='0'
 uci set openclash.config.update='0'

@@ -1,3 +1,16 @@
 * text=auto
 *.sh text eol=lf
 *.md text eol=lf
+*.lua text eol=lf
+*.htm text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.rb text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.init text eol=lf
+*.hotplug text eol=lf
+VERSION text eol=lf
+SOURCE_URL text eol=lf
+EDITION text eol=lf
+*.config text eol=lf

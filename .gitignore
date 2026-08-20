@@ -8,3 +8,5 @@ __pycache__/
 *.pyc
 configs/files/etc/openclash/core/
 firmware/
+
+.tmp-editor/

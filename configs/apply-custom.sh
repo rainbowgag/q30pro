@@ -23,9 +23,18 @@ cat ../configs/custom.config >> .config
 # 覆盖 ALL_PROFILES：common/.config 默认=y，单 profile 必须为 n
 sed -i 's/^CONFIG_TARGET_ALL_PROFILES=.*/CONFIG_TARGET_ALL_PROFILES=n/' .config
 
-# 3) files/ 覆盖（uci-defaults 首次启动设置 LAN/WiFi/关 IPv6）
+# 3) files/ 覆盖（uci-defaults / openclash meta 内核 / openclash-editor / 默认 config.yaml）
 mkdir -p files
 cp -r ../configs/files/. files/
-chmod +x files/etc/uci-defaults/99-jcg-q30-defaults files/etc/openclash/core/clash_meta
+
+# 可执行权限：uci-defaults、openclash 内核、editor 后端与门户服务
+chmod +x files/etc/uci-defaults/99-jcg-q30-defaults \
+        files/etc/uci-defaults/zz-openclash-editor \
+        files/etc/openclash/core/clash_meta \
+        files/etc/init.d/openclash-editor-portal \
+        files/etc/hotplug.d/iface/99-openclash-editor-portal \
+        files/usr/share/openclash-editor/backend.rb \
+        files/usr/share/openclash-editor/portal-watch.sh \
+        files/usr/share/openclash-editor/update.sh
 
 echo "apply-custom done"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# 首次启动执行一次：设置默认 LAN / 关闭 IPv6 / WiFi / OpenClash 内核
+# 首次启动执行一次：默认 LAN / 关闭 IPv6 / WiFi / OpenClash Meta 内核与锁定
 
 # LAN 地址
 uci set network.lan.ipaddr='192.168.100.1'
@@ -18,10 +18,12 @@ uci set wireless.default_radio1.ssid='AA_5G'
 uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.key='asd12345'
 
-# OpenClash 使用 Meta 内核并关闭自动更新
+# OpenClash：Meta 内核 + 默认配置 + 锁定（禁止内核/插件自更新，默认不启动）
 uci set openclash.config.core_version='linux-arm64'
+uci set openclash.config.config_path='/etc/openclash/config/config.yaml'
 uci set openclash.config.auto_update='0'
 uci set openclash.config.update='0'
+uci set openclash.config.enable='0'
 
 uci commit
 exit 0

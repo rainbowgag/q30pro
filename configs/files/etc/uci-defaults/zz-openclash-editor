@@ -1,0 +1,5 @@
+#!/bin/sh
+# 首次启动：启用 OpenClash Visual Editor 门户服务并完成初始化
+[ -x /etc/init.d/openclash-editor-portal ] && /etc/init.d/openclash-editor-portal enable
+[ -x /usr/share/openclash-editor/portal-watch.sh ] && /usr/share/openclash-editor/portal-watch.sh setup
+exit 0

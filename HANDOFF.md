@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5 根因定位。已完成「保守重建」并产出最小化镜像（无 openclash/argon-config/files），等待刷入测试二分。
-> **Next**：刷入最小化镜像测试：能启动→根因在本项目新增定制（openclash/argon-config/files），逐个加回；仍 bootloop→根因在 openwrt-25.12 分支/内核回归，锁定 07.15 提交重建。
-> **Blocker**：原始 bootloop 现场已丢失（设备已恢复成 stock 0715，10.0.0.1）。刷入最小化镜像属破坏性操作，需确认后执行（远程 sysupgrade 或用户 uboot/页面刷入）。
+> **Stopped here**：阶段5。最小化镜像已确认能启动（bootloop 根因锁定在本项目新增定制）；完整版已按新需求重编译完成，待刷入验证。
+> **Next**：刷入完整版测试。若能启动→进入阶段6（锁定 openclash 自更新收尾、验收）；若仍 bootloop→继续二分 files 覆盖 vs openclash。
+> **Blocker**：完整版刷入为破坏性操作，需用户确认/执行；原 bootloop 现场已丢失（设备当前为最小化镜像，后台 10.0.0.1）。
 
 ---
 
@@ -23,70 +23,45 @@
 - 已跑通 feeds：packages / luci / routing / video / kiddin9（814 包）。
 - 构建脚本已上传：/root/q30-build/build-kwrt.sh（支持 PREPARE_ONLY=1 只准备不编译）。
 
-## 编译监控（阶段4）
+## 编译监控（阶段4/5）
 - 启动：cd /root/q30-build/openwrt && export FORCE_UNSAFE_CONFIGURE=1 && setsid make -j8 > /root/q30-build/build.log 2>&1 < /dev/null &
 - 查看进度：tail -30 /root/q30-build/build.log
-- 查看是否还在跑：ps aux | grep make | grep -v grep
 - 产物目录：/root/q30-build/openwrt/bin/targets/mediatek/filogic/
-- 预期耗时：单 profile 约 1–2+ 小时（tools → toolchain → kernel → packages → image）。
-- 注意：必须以 FORCE_UNSAFE_CONFIGURE=1 编译（root 身份下 tools/tar 等 configure 会拒绝）。
+- 注意：必须以 FORCE_UNSAFE_CONFIGURE=1 编译；后台编译被中断后若报 `opkg [host] failed to build`，先 `make package/system/opkg/host/clean` 再继续。
 
-## 固件产物（阶段4 完成，已校验）
-- VPS 路径：/root/q30-build/openwrt/bin/targets/mediatek/filogic/
-- 本地路径：firmware/（已 gitignore）
-- kwrt-mediatek-filogic-jcg_q30-pro-squashfs-sysupgrade.bin（52.9MB）→ OpenWrt 页面升级
-- kwrt-mediatek-filogic-jcg_q30-pro-squashfs-factory.bin（55.6MB）→ uboot 刷入
-- kwrt-mediatek-filogic-jcg_q30-pro-initramfs-kernel.bin（47.4MB）→ 救援/调试
-- SHA256 本地已核对：sysupgrade=4bdf8bdd…0381f，factory=6a582b9e…3570a，
-  initramfs=fb79c669…07eaf（与 VPS 的 sha256sums 一致）。
+## 固件产物
+- 完整版（本次，待验证）：本地 firmware/full-20260820-1114/
+  - sysupgrade 52.9MB / factory 55.7MB / initramfs 47.4MB
+  - SHA256：sysupgrade=c71709d2…532f，factory=611bae7c…002d，initramfs=4ae4276b…6ec2
+- 最小化版（已确认能启动）：本地 firmware/minimal-20260820-094048/
+- 官方 stock 0715（内核 6.12.94，可用作恢复）：本地 firmware/kwrt-07.15.2026-*.bin
+- 首次完整版（bootloop，已废弃）：firmware/kwrt-mediatek-filogic-*.bin（52.9/55.6/47.4MB）
 
-## 阶段5 问题：刷入后 bootloop（已恢复设备，根因定位中）
-- 原始现象：OpenWrt sysupgrade 刷入后，电脑进不去后台。当时本机排查：
-  - 有线网卡已设静态 192.168.100.10（原本 DHCP）。
-  - ARP 能解析 192.168.100.1 -> 50-33-f0-e0-1c-e4（LAN MAC）。
-  - 但 ping/SSH(22)/HTTP(80,443) 时通时断（仅一次 4 个 ping 应答后超时）。
-  - 结论：内核起来，userland 起不来/崩溃，典型 bootloop。
-- 已排除：root 密码就是 root（Kwrt 99-default-settings 里 passwd root=root）。
+## 阶段5 根因定位结论（2026-08-20）
+- 设备状态：当前运行最小化镜像（内核 6.12.103，后台 10.0.0.1，passwall+argon，无 openclash），SSH 曾 root/root 可用。
+- 两版（stock 0715 vs 首次完整版）kernel FIT 的 DTB 完全相同，启动链路一致（uboot 读 kernel 卷 → ubiblock0_1(rootfs) → squashfs → rootfs_data overlay）。
+- 差异：内核 6.12.94→6.12.103 + rootfs 新增（openclash / luci-app-argon-config / files 覆盖）。
+- 已确认最小化镜像能启动 → bootloop 根因在本项目新增定制（openclash / argon-config / files 之一）。
+- 已排查：openclash 默认 enable=0（boot 时 start_service 直接退出）、argon-config 的 uci-defaults 无害、clash_meta 为有效 aarch64 静态 ELF、uci-defaults 在 wifi config 生成之后执行（顺序正确）。
+- 疑点仍待二分：files 覆盖 vs openclash（或 kmod-tun）。
 
-## 阶段5 根因分析（2026-08-20，重要）
-- 现场：设备现已恢复为 stock Kwrt 25.12 **07.15.2026（内核 6.12.94）**，后台 10.0.0.1，SSH/后台正常。
-  本地 firmware/ 同时存在两套镜像：
-  - kwrt-07.15.2026-...（官方 release，内核 6.12.94，可用）
-  - kwrt-mediatek-filogic-...（我们 08.19 自编译，内核 6.12.103，bootloop）
-- 对比结论（在 VPS 上拆包验证）：
-  - 两版 sysupgrade 的 **kernel FIT 里 fdt-1 DTB 完全相同**（crc32=90ddedb8/sha1=2d809ff1）。
-  - 两版都走同一套 MT7981 NAND 启动：uboot 读 `kernel` 卷 → 内核 `ubiblock0_1(rootfs)` 挂 squashfs → `rootfs_data` UBIFS overlay（stock 设备 dmesg 证实）。
-  - 因此差异只剩两点：内核 6.12.94→6.12.103，以及 rootfs 内容。
-- rootfs 差异（stock 0715 vs 我们 08.19）：
-  - stock 有 passwall / argon / my-default-settings，但**没有 openclash、没有 luci-app-argon-config、没有我们的 files 覆盖**。
-  - 我们额外加了：luci-app-openclash、luci-app-argon-config、files/ 覆盖（99-jcg-q30-defaults + clash_meta 10MB）。
-- 判断：bootloop 大概率来自「本项目新增定制」（openclash/files 覆盖）或「openwrt-25.12 分支在 6.12.94→6.12.103 的回归」。
+## 完整版（阶段5 新需求，已编译）
+- 新增功能：
+  1) argon 主题 + luci-app-argon-config
+  2) passwall + openclash（内置 clash_meta Meta 内核；uci-defaults 设 core_version=linux-arm64、auto_update=0、update=0、enable=0 锁定）
+  3) 默认关 IPv6（删 wan6/ip6assign/ula，禁 dhcpv6/ra/ndp）
+  4) 5G SSID=AA_5G / key=asd12345，2.4G 关闭
+  5) 后台 192.168.100.1
+  6) openclash-editor（Visual Editor + 门户服务，来自 rainbowgag/openclash-editor）
+  7) 默认 openclash 配置 /etc/openclash/config/config.yaml（来自 rainbowgag/clash-）
+- 落地文件：configs/custom.config、configs/apply-custom.sh、configs/files/（新增 editor + config.yaml + zz-openclash-editor uci-defaults）、scripts/build-full.sh。
+- 注意：openclash 默认 enable=0（不启动），需在 LuCI 手动开启；自更新已锁。
 
-## 保守重建（二分定位，已完成）
-- 脚本：scripts/build-minimal.sh（已修复：保持 MULTI_PROFILE=y，仅移除 openclash/argon-config/files）
-- 做法：同一 openwrt-25.12 HEAD（4a5c6b9），单 profile jcg_q30-pro，
-  去掉 openclash / luci-app-argon-config / files 覆盖，保留 passwall+argon。
-- 已产出最小化镜像（本地 firmware/minimal-20260820-094048/）：
-  - initramfs-kernel.bin = 31.4MB
-  - squashfs-factory.bin = 37.5MB
-  - squashfs-sysupgrade.bin = 35.3MB
-- 已验证 rootfs：无 openclash、无 99-jcg-q30-defaults、无 clash_meta；保留 passwall/argon。
-- 备份：VPS /root/q30-build/bisect/（.config.full.*.bak、files.full.*.bak、full/ 三镜像）
-- 判定：
-  - 最小化镜像能启动 → 根因在本项目新增定制（openclash / argon-config / files 覆盖），再逐个加回定位。
-  - 仍 bootloop → 根因在 openwrt-25.12 分支/内核回归，锁定到 07.15 提交重建。
-
-## 已解决的构建问题（阶段3）
-- 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
-  jcg,q30-pro（使其走 nand_do_upgrade，与参考机一致）；其余 2 处 hunk 与 jcg 无关（cudy/aigo/umi）。
-- Kwrt 的 feeds install 漏建 package/feeds/kiddin9 软链接：apply-custom.sh 手动补建，
-  并排除 zabbix-ssl / zabbix-extra-mac80211（与 packages feed 的 user id 53 冲突）。
-- 定制产物已落盘：configs/custom.config、configs/apply-custom.sh、configs/files/、configs/diffconfig/。
-
-## 参考设备 / 目标设备（当前为 stock 0715）
-- 当前后台：10.0.0.1，root / root，JCG Q30 PRO（board jcg,q30-pro）
-- 分区：mtd4 ubi = 0x6e80000（110M），UBI 卷 = kernel(4.6M) + rootfs(33.9M) + rootfs_data(65.7M)
-- 采集结果：见 configs/reference/reference-device.md（注意：该文档采集的是 24.10，现已重刷为 25.12 stock）
+## 已解决的构建问题
+- 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的 jcg,q30-pro（走 nand_do_upgrade）。
+- Kwrt feeds install 漏建 package/feeds/kiddin9 软链接：apply-custom.sh 手动补建并排除 zabbix 两个包。
+- 后台编译中断导致 opkg host 失败：make package/system/opkg/host/clean 后重跑。
+- build-minimal.sh 曾误改 MULTI_PROFILE=n 导致全设备构建：已修正为只移除 openclash/argon-config/files。
 
 ## 硬性需求备忘
 - 固件后台地址：192.168.100.1
@@ -101,22 +76,14 @@
 → 4 首次编译（完成）→ 5 刷写验证（进行中）→ 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
-- [2026-08-20] 阶段5：完成保守重建，产出最小化镜像（无 openclash/argon-config/files，保留 passwall/argon），待刷入测试二分。
-- [2026-08-20] 阶段5：确认设备已恢复为 stock 0715；拆包对比定位 bootloop 差异（DTB 相同，差异在内核版本与 rootfs 新增定制）。
+- [2026-08-20] 阶段5：按新需求重编译完整版（+openclash-editor +config.yaml +锁定），已校验 rootfs 内容并下载到本地。
+- [2026-08-20] 阶段5：完成保守重建，最小化镜像确认能启动（用户刷写成功）。
+- [2026-08-20] 阶段5：拆包对比定位 bootloop 差异（DTB 相同，差异在内核版本与 rootfs 新增定制）。
 - [2026-08-20] 阶段5：发现刷入后 bootloop（内核起、userland 挂），定位中。
-- [2026-08-20] 阶段4：编译成功，产出 sysupgrade/factory/initramfs 三个镜像，
-  下载到本地 firmware/ 并核对 SHA256。
-- [2026-08-19] 阶段4：修复 tools/tar 报错（root 需 FORCE_UNSAFE_CONFIGURE=1），重启编译并进入宿主工具链阶段。
-- [2026-08-19] 阶段4 进行中：make -j8 后台编译已启动并通过预检，进入 tools/compile。
-- [2026-08-19] 阶段3：解决补丁冲突（jcg 走 nand_do_upgrade）、补建 kiddin9 软链接、
-  配置单 profile + argon/passwall/openclash、files 覆盖（LAN/WiFi/关IPv6/clash_meta 预置）、
-  make defconfig 通过；保存 .config 快照到 configs/diffconfig/jcg-q30-pro.config。
-- [2026-08-19] 阶段2：采集参考机（10.0.0.1）分区/配置/已装包；确认 110M 分区
-  = mtd4 ubi 0x6e80000，由 09-jcg_q30-pro.patch 定义；落盘 configs/reference/。
-- [2026-08-19] 阶段1：新 VPS 154.36.168.118 环境就绪（依赖/swap/克隆/feeds 通过），
-  并定位 Kwrt 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突。
-- [2026-08-19] 阶段1：切换到新 VPS 154.36.168.118（114G 可用），连通并采集主机信息。
-- [2026-08-19] 阶段1 进行中：SSH 连通 VPS；采集主机信息；定位磁盘占用
-  （/root/ax6-build/openwrt 占 74G，为旧 ipq807x 全设备编译且失败）。
-- [2026-08-19] 阶段0：创建 AGENTS.md / docs/ARCHITECTURE.md / HANDOFF.md，
-  建立 configs/ 与 scripts/ 骨架，git 初始化并首次提交。
+- [2026-08-20] 阶段4：编译成功，产出 sysupgrade/factory/initramfs 三镜像并校验 SHA256。
+- [2026-08-19] 阶段4：修复 tools/tar 报错，重启编译并进入宿主工具链阶段。
+- [2026-08-19] 阶段3：解决补丁冲突、补建 kiddin9 软链接、配置单 profile + 插件 + files 覆盖，defconfig 通过。
+- [2026-08-19] 阶段2：采集参考机分区/配置/已装包，确认 110M 分区，落盘 configs/reference/。
+- [2026-08-19] 阶段1：新 VPS 环境就绪（依赖/swap/克隆/feeds 通过），定位补丁冲突。
+- [2026-08-19] 阶段1：切换到新 VPS 154.36.168.118，连通并采集主机信息。
+- [2026-08-19] 阶段0：创建 AGENTS.md / docs/ARCHITECTURE.md / HANDOFF.md，git 初始化并首次提交。

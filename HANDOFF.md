@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5。最小化镜像已确认能启动（bootloop 根因锁定在本项目新增定制）；完整版已按新需求重编译完成，待刷入验证。
-> **Next**：刷入完整版测试。若能启动→进入阶段6（锁定 openclash 自更新收尾、验收）；若仍 bootloop→继续二分 files 覆盖 vs openclash。
-> **Blocker**：完整版刷入为破坏性操作，需用户确认/执行；原 bootloop 现场已丢失（设备当前为最小化镜像，后台 10.0.0.1）。
+> **Stopped here**：阶段5。完整版刷入后仍失败；已产出 B1 二分测试版（完整配置去 files 覆盖），待刷入定位 files 覆盖 vs openclash 包。
+> **Next**：先 uboot 恢复设备，再刷 B1 测试：B1 能启动→根因在 files 覆盖；B1 仍失败→根因在 openclash/argon-config 包。
+> **Blocker**：完整版（含 files 覆盖）与首次完整版均刷入失败，设备需 uboot 恢复后继续二分。
 
 ---
 

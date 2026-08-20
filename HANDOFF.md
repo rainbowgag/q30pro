@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5。已定位并修复根因：LAN IP 设置语法错误（list ipaddr 未按列表设置），已重新编译完整版待最终验证。
-> **Next**：刷入最终完整版验证（后台 192.168.100.1，双频启用，openclash-editor，config.yaml）。若通过→阶段6 锁自更新收尾。
-> **Blocker**：无（待用户刷入最终版确认）。
+> **Stopped here**：阶段5。完整版已通过初测；按用户反馈补充 openclash 默认 fake-ip-mix 混合模式 + 无线默认启用（热插拔脚本），重编译完成待复测。
+> **Next**：刷 final2 复测：后台 192.168.100.1、双频 AA_5G/AA_2.4G 默认启用、openclash 默认 fake-ip-mix 混合模式。通过后进入阶段6 锁自更新收尾。
+> **Blocker**：无（待复测）。
 
 ---
 

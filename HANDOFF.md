@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5 刷写后发现固件启动后崩溃（bootloop），正在定位根因。
-> **Next**：确认崩溃根因（抓 boot 日志或保守重建），修复后重刷；先用 uboot 恢复设备。
-> **Blocker**：新固件刷入后设备能起内核（ARP 应答 192.168.100.1）但 userland 起不来（SSH/LuCI 无响应），ping 时通时断。
+> **Stopped here**：阶段5 定位根因中。已确认设备已用 stock 0715 恢复（后台 10.0.0.1 正常）；正在 VPS 做「保守重建」二分定位 bootloop。
+> **Next**：等最小化镜像（无 openclash/argon-config/files 覆盖）编译完成后刷入测试：若能启动→是本项目新增定制导致，再逐个加回；若仍 bootloop→锁定 openwrt-25.12 到 07.15 提交重建。
+> **Blocker**：原始 bootloop 现场已丢失（设备已恢复成 stock 0715）。要拿崩溃日志需 UART 串口或 uboot TFTP 引导 initramfs。
 
 ---
 
@@ -40,14 +40,37 @@
 - SHA256 本地已核对：sysupgrade=4bdf8bdd…0381f，factory=6a582b9e…3570a，
   initramfs=fb79c669…07eaf（与 VPS 的 sha256sums 一致）。
 
-## 阶段5 问题：刷入后 bootloop（待解决）
-- 现象：OpenWrt sysupgrade 刷入后，电脑进不去后台。本机排查：
+## 阶段5 问题：刷入后 bootloop（已恢复设备，根因定位中）
+- 原始现象：OpenWrt sysupgrade 刷入后，电脑进不去后台。当时本机排查：
   - 有线网卡已设静态 192.168.100.10（原本 DHCP）。
-  - ARP 能解析 192.168.100.1 -> 50-33-f0-e0-1c-e4（说明固件已起、LAN IP 已变成 192.168.100.1）。
-  - 但 ping/SSH(22)/HTTP(80,443) 全部无响应；仅一次抓到 4 个 ping 应答后即超时。
-  - 结论：内核起来了，但 userland（dropbear/LuCI）没起来就挂/崩溃，典型 bootloop。
-- 已排除：root 密码就是 root（my-default-settings 的 99-default-settings 里 passwd root=root）。
-- 待查：抓 dmesg/logread 定位崩溃点；备选保守重建（先去 passwall/openclash/自定义 uci-defaults 二分）。
+  - ARP 能解析 192.168.100.1 -> 50-33-f0-e0-1c-e4（LAN MAC）。
+  - 但 ping/SSH(22)/HTTP(80,443) 时通时断（仅一次 4 个 ping 应答后超时）。
+  - 结论：内核起来，userland 起不来/崩溃，典型 bootloop。
+- 已排除：root 密码就是 root（Kwrt 99-default-settings 里 passwd root=root）。
+
+## 阶段5 根因分析（2026-08-20，重要）
+- 现场：设备现已恢复为 stock Kwrt 25.12 **07.15.2026（内核 6.12.94）**，后台 10.0.0.1，SSH/后台正常。
+  本地 firmware/ 同时存在两套镜像：
+  - kwrt-07.15.2026-...（官方 release，内核 6.12.94，可用）
+  - kwrt-mediatek-filogic-...（我们 08.19 自编译，内核 6.12.103，bootloop）
+- 对比结论（在 VPS 上拆包验证）：
+  - 两版 sysupgrade 的 **kernel FIT 里 fdt-1 DTB 完全相同**（crc32=90ddedb8/sha1=2d809ff1）。
+  - 两版都走同一套 MT7981 NAND 启动：uboot 读 `kernel` 卷 → 内核 `ubiblock0_1(rootfs)` 挂 squashfs → `rootfs_data` UBIFS overlay（stock 设备 dmesg 证实）。
+  - 因此差异只剩两点：内核 6.12.94→6.12.103，以及 rootfs 内容。
+- rootfs 差异（stock 0715 vs 我们 08.19）：
+  - stock 有 passwall / argon / my-default-settings，但**没有 openclash、没有 luci-app-argon-config、没有我们的 files 覆盖**。
+  - 我们额外加了：luci-app-openclash、luci-app-argon-config、files/ 覆盖（99-jcg-q30-defaults + clash_meta 10MB）。
+- 判断：bootloop 大概率来自「本项目新增定制」（openclash/files 覆盖）或「openwrt-25.12 分支在 6.12.94→6.12.103 的回归」。正在保守重建二分。
+
+## 保守重建（二分定位，进行中）
+- 脚本：scripts/build-minimal.sh（已上传 VPS /root/q30-build/build-minimal.sh）
+- 做法：同一 openwrt-25.12 HEAD（4a5c6b9），单 profile jcg_q30-pro，
+  去掉 openclash / luci-app-argon-config / files 覆盖，保留 passwall+argon（与 stock 0715 一致）。
+- 备份：/root/q30-build/bisect/（.config.full.*.bak、files.full.*.bak、full/ 三镜像）
+- 日志：/root/q30-build/build-minimal.log
+- 判定：
+  - 最小化镜像能启动 → 根因在本项目新增定制（openclash / files 覆盖），再逐个加回定位。
+  - 仍 bootloop → 根因在 openwrt-25.12 分支/内核回归，锁定到 07.15 提交重建。
 
 ## 已解决的构建问题（阶段3）
 - 25-platform.patch 对 openwrt-25.12 HEAD 的 3 处 hunk 冲突：已用 sed 删除 platform.sh 中的
@@ -56,10 +79,10 @@
   并排除 zabbix-ssl / zabbix-extra-mac80211（与 packages feed 的 user id 53 冲突）。
 - 定制产物已落盘：configs/custom.config、configs/apply-custom.sh、configs/files/、configs/diffconfig/。
 
-## 参考设备（已刷好固件，作为参照）
-- 后台地址：10.0.0.1
-- 用户名 / 密码：root / root
-- 采集结果：见 configs/reference/reference-device.md（分区表/已装包/现状-目标差异）
+## 参考设备 / 目标设备（当前为 stock 0715）
+- 当前后台：10.0.0.1，root / root，JCG Q30 PRO（board jcg,q30-pro）
+- 分区：mtd4 ubi = 0x6e80000（110M），UBI 卷 = kernel(4.6M) + rootfs(33.9M) + rootfs_data(65.7M)
+- 采集结果：见 configs/reference/reference-device.md（注意：该文档采集的是 24.10，现已重刷为 25.12 stock）
 
 ## 硬性需求备忘
 - 固件后台地址：192.168.100.1
@@ -71,9 +94,10 @@
 
 ## 阶段计划（小步推进，每阶段一个会话）
 0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认（完成）→ 3 定制配置（完成）
-→ 4 首次编译（完成）→ 5 刷写验证 → 6 锁定更新 → 7 收尾交付
+→ 4 首次编译（完成）→ 5 刷写验证（进行中）→ 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-20] 阶段5：确认设备已恢复为 stock 0715；拆包对比定位 bootloop 差异（DTB 相同，差异在内核版本与 rootfs 新增定制）；启动保守重建二分。
 - [2026-08-20] 阶段5：发现刷入后 bootloop（内核起、userland 挂），定位中。
 - [2026-08-20] 阶段4：编译成功，产出 sysupgrade/factory/initramfs 三个镜像，
   下载到本地 firmware/ 并核对 SHA256。

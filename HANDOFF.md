@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5。完整版刷入后仍失败；已产出 B1 二分测试版（完整配置去 files 覆盖），待刷入定位 files 覆盖 vs openclash 包。
-> **Next**：先 uboot 恢复设备，再刷 B1 测试：B1 能启动→根因在 files 覆盖；B1 仍失败→根因在 openclash/argon-config 包。
-> **Blocker**：完整版（含 files 覆盖）与首次完整版均刷入失败，设备需 uboot 恢复后继续二分。
+> **Stopped here**：阶段5。已定位并修复根因：LAN IP 设置语法错误（list ipaddr 未按列表设置），已重新编译完整版待最终验证。
+> **Next**：刷入最终完整版验证（后台 192.168.100.1，双频启用，openclash-editor，config.yaml）。若通过→阶段6 锁自更新收尾。
+> **Blocker**：无（待用户刷入最终版确认）。
 
 ---
 

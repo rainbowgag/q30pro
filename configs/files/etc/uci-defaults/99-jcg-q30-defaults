@@ -33,16 +33,15 @@ uci set openclash.config.auto_update='0'
 uci set openclash.config.update='0'
 uci set openclash.config.enable='0'
 
-# nginx 纯 HTTP：删掉 nginx-util 的 443 SSL server 和 80→443 重定向，只留 80
-uci -q delete nginx._lan
-uci -q delete nginx._redirect2ssl
-# _sc_pw（passwall 快捷入口）去掉 443，并把硬编码的 10.0.0.1 改为实际 LAN IP
-uci -q delete nginx._sc_pw.listen
-uci add_list nginx._sc_pw.listen='80'
-uci set nginx._sc_pw.return='302 http://192.168.100.1/cgi-bin/luci/admin/services/passwall'
-
+# nginx 纯 HTTP：默认配置已由 files/etc/config/nginx 提供（无 443/_redirect2ssl）。
+# 这里只处理 Kwrt 99-default-settings 额外加的 _sc_pw（passwall 快捷入口）里的 443
+if [ -n "$(uci -q get nginx._sc_pw)" ]; then
+  uci -q delete nginx._sc_pw.listen
+  uci add_list nginx._sc_pw.listen='80'
+  uci set nginx._sc_pw.return='302 http://192.168.100.1/cgi-bin/luci/admin/services/passwall'
+fi
 uci commit
 
-# 重启 nginx 使上面的纯 HTTP 配置生效（nginx 在 60_nginx-luci-support 阶段已被提前启动）
+# 重启 nginx 使纯 HTTP 配置生效（nginx 在 60_nginx-luci-support 阶段已被提前启动）
 [ -x /etc/init.d/nginx ] && /etc/init.d/nginx restart 2>/dev/null
 exit 0

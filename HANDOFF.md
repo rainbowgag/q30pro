@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5。完整版已通过初测；按用户反馈补充 openclash 默认 fake-ip-mix 混合模式 + 无线默认启用（热插拔脚本），重编译完成待复测。
-> **Next**：刷 final2 复测：后台 192.168.100.1、双频 AA_5G/AA_2.4G 默认启用、openclash 默认 fake-ip-mix 混合模式。通过后进入阶段6 锁自更新收尾。
+> **Stopped here**：阶段5。已修复无线默认禁用（disabled 需设在 wifi-iface default_radioX 上），并更新 openclash-editor 到 2.4.0，final4 编译完成待复测。
+> **Next**：刷 final4 复测：双频 AA_5G/AA_2.4G 默认启用、openclash 默认 fake-ip-mix、editor 2.4.0。通过后进入阶段6。
 > **Blocker**：无（待复测）。
 
 ---

@@ -1,0 +1,8 @@
+location = /connecttest.txt {
+    default_type text/plain;
+    return 200 'Microsoft Connect Test';
+}
+location = /ncsi.txt {
+    default_type text/plain;
+    return 200 'Microsoft NCSI';
+}

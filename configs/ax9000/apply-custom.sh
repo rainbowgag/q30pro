@@ -13,7 +13,8 @@ for d in feeds/kiddin9/*/; do
   ln -sfn "../../../feeds/kiddin9/$name" "package/feeds/kiddin9/$name"
 done
 
-# 1) xiaomi,ax9000 无需 sed platform.sh（Kwrt 04-stock.patch 已处理）
+# 1) 修复 Kwrt 04-stock.patch 对 platform.sh 的 hunk 冲突（上游新增 CI_DATA_UBIPART 行），应用 A/B 双分区升级逻辑（幂等）
+python3 ../scripts/patch-ax9000-platformsh.py target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
 
 # 2) 追加 .config
 echo >> .config

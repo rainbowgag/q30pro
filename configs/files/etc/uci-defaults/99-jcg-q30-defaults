@@ -1,5 +1,5 @@
 #!/bin/sh
-# 首次启动：LAN / 关闭 IPv6 / 双频 WiFi / OpenClash Meta 内核与锁定
+# 首次启动：LAN / 关闭 IPv6 / 双频 WiFi / OpenClash 锁定 / nginx 纯 HTTP
 
 # LAN 地址（config_generate 用 list ipaddr，先删后加并带 /24 前缀）
 uci -q del network.lan.ipaddr
@@ -13,7 +13,7 @@ uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.ndp='disabled'
 
-# WiFi：启用双频（25.12 的 wifi config 把 disabled 放在 wifi-iface 上，radio 与 iface 都设一遍）
+# WiFi：启用 2.4G 与 5G（25.12 的 disabled 在 wifi-iface 上）
 uci set wireless.radio0.disabled='0'
 uci set wireless.radio1.disabled='0'
 uci set wireless.default_radio0.disabled='0'
@@ -32,6 +32,14 @@ uci set openclash.config.config_path='/etc/openclash/config/config.yaml'
 uci set openclash.config.auto_update='0'
 uci set openclash.config.update='0'
 uci set openclash.config.enable='0'
+
+# nginx 纯 HTTP：删掉 nginx-util 的 443 SSL server 和 80→443 重定向，只留 80
+uci -q delete nginx._lan
+uci -q delete nginx._redirect2ssl
+# _sc_pw（passwall 快捷入口）去掉 443，并把硬编码的 10.0.0.1 改为实际 LAN IP
+uci -q delete nginx._sc_pw.listen
+uci add_list nginx._sc_pw.listen='80'
+uci set nginx._sc_pw.return='302 http://192.168.100.1/cgi-bin/luci/admin/services/passwall'
 
 uci commit
 exit 0

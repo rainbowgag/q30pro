@@ -42,4 +42,7 @@ uci add_list nginx._sc_pw.listen='80'
 uci set nginx._sc_pw.return='302 http://192.168.100.1/cgi-bin/luci/admin/services/passwall'
 
 uci commit
+
+# 重启 nginx 使上面的纯 HTTP 配置生效（nginx 在 60_nginx-luci-support 阶段已被提前启动）
+[ -x /etc/init.d/nginx ] && /etc/init.d/nginx restart 2>/dev/null
 exit 0

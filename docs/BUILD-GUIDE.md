@@ -253,7 +253,19 @@ ERROR: package/system/opkg [host] failed to build.
 5. **确认升级路径**：不同设备在 `platform.sh` 里的分支不同（nand / emmc / dualboot）。
 6. **注意 openclash-editor 的架构**：aarch64 用 `linux-arm64` 内核；其它架构改 `core_version` 和 `clash_meta` 二进制。
 
-### 6.2 Redmi AX6 特别注意
+### 6.2 Xiaomi AX9000 特别注意
+
+> 已预写好骨架：`configs/ax9000/`（custom.config / apply-custom.sh / files 覆盖 / README）。
+> 编译时执行 `bash /root/q30-build/configs/ax9000/apply-custom.sh`，再 `make defconfig && make`。
+
+- 设备名 `xiaomi_ax9000`，target `qualcommax/ipq807x`，SoC IPQ8072A（compatible `qcom,ipq8074`）。
+- NAND 256MB；DTS 分区：`ubi_kernel` 56MB + `rootfs` 182.5MB。
+  - ⚠️ 若按用户要求用 110M 分区，需额外加 DTS 分区补丁（骨架里暂未做，见 configs/ax9000/README.md TODO）。
+- **三频 WiFi**：ath11k（QCN9074，5G 游戏频段）+ ath10k（QCA9887，2.4G/5G），有 radio0/1/2 三个 radio。
+- 双分区 `nand_do_upgrade`（Kwrt 04-stock.patch 已处理，不要再 sed platform.sh）。
+- 已复用 Q30 的 nginx 纯 HTTP + NCSI 修复 + clash_meta/editor/config.yaml。
+
+### 6.3 Redmi AX6 特别注意
 
 > 已预写好骨架：`configs/ax6/`（custom.config / apply-custom.sh / files 覆盖 / README）。
 > 编译时在 openwrt 源码目录内执行 `bash /root/q30-build/configs/ax6/apply-custom.sh`，再 `make defconfig && make`。

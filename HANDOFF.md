@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段7 完成。固件全部需求已实现并验证通过，含纯 HTTP 后台、双频 WiFi、openclash 混合模式、editor 2.4.0、NCSI 联网检测修复。
-> **Next**：无（已交付）。
+> **Stopped here**：阶段8：Xiaomi AX9000 固件编译成功（qualcommax/ipq807x，无 openclash，argon+passwall+luci-nginx），产物已下载到本地。
+> **Next**：可刷写验证 AX9000（factory.ubi 走 uboot / sysupgrade.bin 走 LuCI）。
 > **Blocker**：无。
 
 ---
@@ -13,9 +13,10 @@
 - 端口：22
 - 系统：Ubuntu 24.04.1 / x86_64 / 8 核 / 7.8G 内存（无 swap）/ 114G 可用磁盘
 
-## 旧 VPS（保留，不用于本次构建）
-- IP：154.12.50.97（root / 4Bdl9fpwqY / 22）
-- 保留原因：/root/ax6-build（74G）等旧数据需保留，勿删
+## 旧 VPS（154.12.50.97，本次 AX9000 构建机）
+- IP：154.12.50.97（root / gijhJMZL8097 / 22）
+- 系统：Ubuntu 22.04 / x86_64 / 8 核 / 7.8G 内存 / 117G 磁盘（已重装，原 /root/ax6-build 数据已不存在）
+- 本次用于编译 Xiaomi AX9000（构建根 /root/q30-build，源码树 /root/q30-build/openwrt）
 
 ## 阶段1 结论（新 VPS 154.36.168.118）
 - 依赖已装（gcc 13.3 / clang-18 / llvm-18 / qemu-utils 等）；已建 8G swap 文件并写入 /etc/fstab。
@@ -76,6 +77,7 @@
 → 4 首次编译（完成）→ 5 刷写验证（进行中）→ 6 锁定更新 → 7 收尾交付
 
 ## 最近完成
+- [2026-08-22] 阶段8：Xiaomi AX9000 固件编译成功（qualcommax/ipq807x，无 openclash，argon+passwall+luci-nginx），产物本地 firmware/ax9000-20260822-0301/。
 - [2026-08-20] 阶段5：按新需求重编译完整版（+openclash-editor +config.yaml +锁定），已校验 rootfs 内容并下载到本地。
 - [2026-08-20] 阶段5：完成保守重建，最小化镜像确认能启动（用户刷写成功）。
 - [2026-08-20] 阶段5：拆包对比定位 bootloop 差异（DTB 相同，差异在内核版本与 rootfs 新增定制）。

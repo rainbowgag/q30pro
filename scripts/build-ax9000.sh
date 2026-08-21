@@ -15,13 +15,18 @@ JOBS="${JOBS:-$(( $(nproc) + 1 ))}"
 mkdir -p "$BUILD_ROOT"
 cd "$BUILD_ROOT"
 
-# 1) 获取 Kwrt 编排层（devices/ 等）
+# 1) 获取 Kwrt 编排层（devices/ 等；跳过 .git，避免与 q30pro 仓库自身的 .git 冲突）
 if [ ! -d devices ]; then
   tmp="$(mktemp -d)"
   git clone --depth 1 -b "$KWRT_BRANCH" https://github.com/kiddin9/Kwrt.git "$tmp"
-  shopt -s dotglob
-  mv "$tmp"/* .
-  rmdir "$tmp"
+  shopt -s dotglob nullglob
+  for item in "$tmp"/*; do
+    base="$(basename "$item")"
+    [ "$base" = ".git" ] && continue
+    mv "$item" .
+  done
+  shopt -u dotglob nullglob
+  rm -rf "$tmp"
 fi
 
 # 2) 获取上游 openwrt 源码（与 devices/ 同级）

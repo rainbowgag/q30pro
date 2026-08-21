@@ -260,10 +260,10 @@ ERROR: package/system/opkg [host] failed to build.
 
 - 设备名 `xiaomi_ax9000`，target `qualcommax/ipq807x`，SoC IPQ8072A（compatible `qcom,ipq8074`）。
 - NAND 256MB；DTS 分区：`ubi_kernel` 56MB + `rootfs` 182.5MB。
-  - ⚠️ 若按用户要求用 110M 分区，需额外加 DTS 分区补丁（骨架里暂未做，见 configs/ax9000/README.md TODO）。
+  - 分区按 DTS 实际值：`ubi_kernel` 56MB + `rootfs` 182.5MB。
 - **三频 WiFi**：ath11k（QCN9074，5G 游戏频段）+ ath10k（QCA9887，2.4G/5G），有 radio0/1/2 三个 radio。
 - 双分区 `nand_do_upgrade`（Kwrt 04-stock.patch 已处理，不要再 sed platform.sh）。
-- 已复用 Q30 的 nginx 纯 HTTP + NCSI 修复 + clash_meta/editor/config.yaml。
+- 已复用 Q30 的 nginx 纯 HTTP + NCSI 修复；**不装 openclash / openclash-editor**（按需求）。
 
 ### 6.3 Redmi AX6 特别注意
 

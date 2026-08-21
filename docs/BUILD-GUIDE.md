@@ -255,6 +255,14 @@ ERROR: package/system/opkg [host] failed to build.
 
 ### 6.2 Redmi AX6 特别注意
 
+> 已预写好骨架：`configs/ax6/`（custom.config / apply-custom.sh / files 覆盖 / README）。
+> 编译时在 openwrt 源码目录内执行 `bash /root/q30-build/configs/ax6/apply-custom.sh`，再 `make defconfig && make`。
+
+- 设备名 `redmi_ax6`，target `qualcommax/ipq807x`，SoC IPQ8071。
+- SPI-NAND 128MB，**双 rootfs（A/B）**，升级走 `nand_do_upgrade` + `flag_boot_rootfs` 切换（Kwrt `04-stock.patch` 已处理，**不要再 sed platform.sh**）。
+- WiFi 是 ath10k（QCA9887+QCN5054），固件 `ipq-wifi-redmi_ax6`；校准数据由 Kwrt 的 `11-ath10k-caldata` 热插拔提取。
+- 镜像格式 FitImage + UbiFit，kernel 在 UBI fit 卷，与 MT7981 的 Q30 不同。
+
 - target：`ipq807x`，subtarget 需在 Kwrt `devices/ipq807x/` 下找设备名。
 - 分区是 eMMC（不是 SPI NAND），升级路径与 MT7981 不同。
 - WiFi 驱动是 QCA（ath11k），不是 MTK mt76。

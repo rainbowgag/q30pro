@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段5。已修复无线默认禁用（disabled 需设在 wifi-iface default_radioX 上），并更新 openclash-editor 到 2.4.0，final4 编译完成待复测。
-> **Next**：刷 final4 复测：双频 AA_5G/AA_2.4G 默认启用、openclash 默认 fake-ip-mix、editor 2.4.0。通过后进入阶段6。
-> **Blocker**：无（待复测）。
+> **Stopped here**：阶段7。固件已验证可用（后台/WiFi/openclash 混合模式/editor 2.4.0 均正常）；源码已推送 GitHub，编译指南已整理。
+> **Next**：无（项目已交付）。后续换 VPS 时，给 Codex 本仓库链接按 docs/BUILD-GUIDE.md 即可重新编译。
+> **Blocker**：无。
 
 ---
 
@@ -87,3 +87,7 @@
 - [2026-08-19] 阶段1：新 VPS 环境就绪（依赖/swap/克隆/feeds 通过），定位补丁冲突。
 - [2026-08-19] 阶段1：切换到新 VPS 154.36.168.118，连通并采集主机信息。
 - [2026-08-19] 阶段0：创建 AGENTS.md / docs/ARCHITECTURE.md / HANDOFF.md，git 初始化并首次提交。
+## 阶段7 收尾（完成）
+- 源码已推送：https://github.com/rainbowgag/q30pro.git
+- 编译指南：docs/BUILD-GUIDE.md（含全部踩坑经验与其它设备适配方法）
+- 固件：firmware/final4-20260821-2358/（已验证可用）

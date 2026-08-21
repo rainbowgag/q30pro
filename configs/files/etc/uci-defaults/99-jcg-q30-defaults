@@ -25,6 +25,9 @@ uci set wireless.default_radio1.ssid='AA_5G'
 uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.key='asd12345'
 
+# 劫持 Windows NCSI 联网检测（解决国内网络下"以太网无网络"误报）
+uci set alwaysonline.global.enabled='1'
+
 # OpenClash：Meta 内核 + 混合模式 + 默认配置 + 锁定（禁自更新，默认不启动）
 uci set openclash.config.core_version='linux-arm64'
 uci set openclash.config.en_mode='fake-ip-mix'

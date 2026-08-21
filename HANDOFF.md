@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段7。固件已验证可用（后台/WiFi/openclash 混合模式/editor 2.4.0 均正常）；源码已推送 GitHub，编译指南已整理。
-> **Next**：无（项目已交付）。后续换 VPS 时，给 Codex 本仓库链接按 docs/BUILD-GUIDE.md 即可重新编译。
+> **Stopped here**：阶段7 完成。固件全部需求已实现并验证通过（后台 http、双频 WiFi、openclash 混合模式、editor 2.4.0、纯 HTTP nginx）。
+> **Next**：无（已交付）。
 > **Blocker**：无。
 
 ---

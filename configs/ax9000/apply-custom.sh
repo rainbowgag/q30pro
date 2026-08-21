@@ -21,7 +21,7 @@ cat ../configs/ax9000/custom.config >> .config
 sed -i 's/^CONFIG_TARGET_ALL_PROFILES=.*/CONFIG_TARGET_ALL_PROFILES=n/' .config
 
 # 3) files 覆盖
-mkdir -p files
+mkdir -p files files/etc/config
 # 3.1 共享文件（nginx 纯 HTTP + NCSI）
 cp -f ../configs/files/etc/config/nginx files/etc/config/ 2>/dev/null || true
 mkdir -p files/etc/nginx/conf.d

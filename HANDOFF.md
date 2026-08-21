@@ -1,6 +1,6 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段7 完成。固件全部需求已实现并验证通过（后台 http、双频 WiFi、openclash 混合模式、editor 2.4.0、纯 HTTP nginx）。
+> **Stopped here**：阶段7 完成。固件全部需求已实现并验证通过，含纯 HTTP 后台、双频 WiFi、openclash 混合模式、editor 2.4.0、NCSI 联网检测修复。
 > **Next**：无（已交付）。
 > **Blocker**：无。
 

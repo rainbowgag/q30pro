@@ -69,12 +69,21 @@ if new not in s:
 
 # --- 3) dp1..dp4 phy-mode=qsgmii, dp5 phy-mode=sgmii ---
 for label, mode in [('dp1','qsgmii'),('dp2','qsgmii'),('dp3','qsgmii'),('dp4','qsgmii'),('dp5','sgmii')]:
-    node = '&%s {\n\tstatus = "okay";\n' % label
-    if node not in s:
+    head = '&%s {\n' % label
+    idx = s.find(head)
+    if idx == -1:
         continue
-    if ('\tphy-mode = "%s";\n' % mode) in s:
+    # 仅在该节点块内判断是否已有 phy-mode，避免被其它节点误判
+    end = s.find('\n};\n', idx)
+    node_blk = s[idx:end + 4] if end != -1 else s[idx:idx + 200]
+    if ('\tphy-mode = "%s";\n' % mode) in node_blk:
         continue
-    s = s.replace(node, node + '\tphy-mode = "%s";\n' % mode, 1)
+    anchor = '\tstatus = "okay";\n'
+    aidx = s.find(anchor, idx)
+    if aidx == -1:
+        continue
+    ins = aidx + len(anchor)
+    s = s[:ins] + '\tphy-mode = "%s";\n' % mode + s[ins:]
 
 # --- 4) 删除底部 dp1..dp5 的 nvmem 删除语句，恢复独立 MAC ---
 for label in ['dp1','dp2','dp3','dp4','dp5']:

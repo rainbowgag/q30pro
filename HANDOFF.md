@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段9b：修复有线(QCA8075 QSGMII)、QCN9074 board 覆盖(uci-defaults)、5G 160MHz(US)并重编译，产物已下载。
-> **Next**：刷写验证新固件（firmware/ax9000-20260822-1413/，不保留配置）。
-> **Blocker**：无。
+> **Stopped here**：阶段9c：有线补 dp1..dp4 phy-mode=qsgmii/dp5=sgmii 并恢复各网口独立 MAC；QCN9074 同时提供 board-2.bin 与 raw board.bin(API1 回退)；三频 SSID/160MHz 按 radio 路径重排。已开始在 VPS 重编译（make-ax9000-7.log）。
+> **Next**：等编译完成 → 下载产物到 firmware/ax9000-<时间戳>/ 并校验 SHA256 → 用户断电重启路由后刷 sysupgrade（不保留配置）验证。
+> **Blocker**：GitHub push 暂时被墙（重试中）；路由因在线 rmmod ath11k_pci 掉线，需断电重启。
 
 ---
 
@@ -108,3 +108,5 @@
 - 源码已推送：https://github.com/rainbowgag/q30pro.git
 - 编译指南：docs/BUILD-GUIDE.md（含全部踩坑经验与其它设备适配方法）
 - 固件：firmware/final4-20260821-2358/（已验证可用）
+
+- [2026-08-22] 阶段9c：有线补 phy-mode(qsgmii/sgmii)+恢复独立 MAC，QCN9074 加 raw board.bin API1 回退，三频 160MHz 按 radio 路径重排，开始重编译。

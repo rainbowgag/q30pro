@@ -36,6 +36,7 @@ cp -r ../configs/ax9000/files/. files/
 
 chmod +x files/etc/uci-defaults/99-ax9000-defaults \
         files/etc/uci-defaults/zz-fix-distfeeds \
+        files/etc/uci-defaults/zz-fix-qcn9074-board \
         files/etc/hotplug.d/ieee80211/30-ax9000-wifi
 
 echo "ax9000 apply-custom done"

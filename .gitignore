@@ -11,4 +11,4 @@ firmware/
 .tmp-editor/
 
 # 例外：AX9000 QCN9074 校准 board 数据（虽 *.bin 被忽略，但需纳入版本库）
-!configs/ax9000/files/lib/firmware/ath11k/QCN9074/hw1.0/board-2.bin
+!configs/ax9000/files/etc/ax9000/qcn9074-board-2.bin

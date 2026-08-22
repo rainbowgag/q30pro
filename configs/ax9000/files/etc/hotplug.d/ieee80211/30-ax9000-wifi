@@ -1,6 +1,7 @@
 #!/bin/sh
 # Xiaomi AX9000 三频无线默认设置：在 Kwrt 的 10-wifi-detect 生成无线配置后，按 band+path 重新应用。
 # 三频：2.4G(AA_2.4G) / 5G 主频(AA_5G,160M) / 5G 游戏频(AA_5G_Game)。密码 asd12345。
+# 注意：160MHz 在 CN 法规域不可用（5.2G 全被 NO_IR），改用 US 以启用 160MHz（DFS）。
 [ "${ACTION}" = "add" ] || exit 0
 
 (
@@ -15,13 +16,13 @@
 
         case "$band" in
             2g)
-                ssid="AA_2.4G"; htmode="HE20"; channel="auto"
+                ssid="AA_2.4G"; htmode="HE20"; channel="auto"; country="CN"
                 ;;
             5g)
                 if echo "$path" | grep -q "c000000.wifi"; then
-                    ssid="AA_5G"; htmode="HE160"; channel="36"
+                    ssid="AA_5G"; htmode="HE160"; channel="100"; country="US"
                 else
-                    ssid="AA_5G_Game"; htmode="HE160"; channel="100"
+                    ssid="AA_5G_Game"; htmode="HE80"; channel="149"; country="US"
                 fi
                 ;;
             *)
@@ -30,6 +31,7 @@
         esac
 
         uci set wireless.$radio.disabled='0'
+        uci set wireless.$radio.country="$country"
         uci set wireless.$radio.htmode="$htmode"
         uci set wireless.$radio.channel="$channel"
         uci set wireless.default_$radio.ssid="$ssid"

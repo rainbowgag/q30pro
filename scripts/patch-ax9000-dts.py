@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-# 修复 AX9000 DTS：把 QCA8075 的 4 个 PHY 节点包进 ethernet-phy-package(qcom,qca8075-package)。
-# 否则 qca807x PHY 驱动 probe 时 package 匹配失败返回 -EINVAL，导致 4 个 LAN 口有线不通（只发不收）。
+# 修复 AX9000 DTS：
+# 1) 把 QCA8075 的 4 个 PHY 节点包进 ethernet-phy-package(qcom,qca8075-package)。
+# 2) 加 qcom,package-mode="qsgmii"（AX9000 的 switch_mac_mode=0xb=MAC_MODE_QSGMII，必须匹配）。
 import io, sys
 
 path = sys.argv[1] if len(sys.argv) > 1 else \
@@ -33,6 +34,7 @@ new = ('\tethernet-phy-package@0 {\n'
        '\t\t#address-cells = <1>;\n'
        '\t\t#size-cells = <0>;\n'
        '\t\treg = <0>;\n'
+       '\t\tqcom,package-mode = "qsgmii";\n'
        '\n'
        '\t\tqca8075_0: ethernet-phy@0 {\n'
        '\t\t\tcompatible = "ethernet-phy-ieee802.3-c22";\n'
@@ -56,7 +58,7 @@ new = ('\tethernet-phy-package@0 {\n'
        '\t};\n')
 
 if new in s:
-    print('ALREADY PATCHED: %s' % path)
+    print('ALREADY PATCHED(full): %s' % path)
     sys.exit(0)
 
 if old not in s:
@@ -65,4 +67,4 @@ if old not in s:
 
 s = s.replace(old, new, 1)
 io.open(path, 'w', encoding='utf-8').write(s)
-print('PATCHED DTS: %s' % path)
+print('PATCHED DTS(qsgmii): %s' % path)

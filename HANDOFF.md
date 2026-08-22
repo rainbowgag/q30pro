@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段9c：有线补 dp1..dp4 phy-mode=qsgmii/dp5=sgmii 并恢复各网口独立 MAC；QCN9074 同时提供 board-2.bin 与 raw board.bin(API1 回退)；三频 SSID/160MHz 按 radio 路径重排。已开始在 VPS 重编译（make-ax9000-7.log）。
-> **Next**：等编译完成 → 下载产物到 firmware/ax9000-<时间戳>/ 并校验 SHA256 → 用户断电重启路由后刷 sysupgrade（不保留配置）验证。
-> **Blocker**：GitHub push 暂时被墙（重试中）；路由因在线 rmmod ath11k_pci 掉线，需断电重启。
+> **Stopped here**：阶段9c：有线补 phy-mode(qsgmii/sgmii)+独立MAC(userspace 98-ax9000-mac)，QCN9074 raw board.bin(API1 回退) 已验证可让三频 phy 注册，三频 160MHz 按 radio 路径重排，编译完成。
+> **Next**：刷写验证 firmware/ax9000-20260822-161456/（sysupgrade 不保留配置）→ 电脑网线 DHCP 进 192.168.100.1、三频、160MHz。
+> **Blocker**：GitHub push 被墙（重试中）；路由在线 rmmod 后需断电重启一次。
 
 ---
 
@@ -110,3 +110,5 @@
 - 固件：firmware/final4-20260821-2358/（已验证可用）
 
 - [2026-08-22] 阶段9c：有线补 phy-mode(qsgmii/sgmii)+恢复独立 MAC，QCN9074 加 raw board.bin API1 回退，三频 160MHz 按 radio 路径重排，开始重编译。
+
+- [2026-08-22] 阶段9c：有线 phy-mode 修复+独立MAC userspace 脚本，QCN9074 raw board.bin 三频回退，三频 160MHz 路径重排，产物 firmware/ax9000-20260822-161456/。

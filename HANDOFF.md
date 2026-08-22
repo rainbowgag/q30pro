@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段9d：WAN QCA8081 无链路，给 qca8081 补 reset-deassert-us=10000 并重编译（firmware/ax9000-20260822-171557/）。
-> **Next**：刷写验证 WAN 2.5G 是否自动 link；若仍 NO-CARRIER，再查 qca8081/SSDK 的 2.5G 配置。
-> **Blocker**：无（GitHub 已恢复）。
+> **Stopped here**：阶段AX6 完成：Redmi AX6 定制固件编译成功，产物已下载到本地（firmware/ax6-20260822-1731/）。
+> **Next**：刷写到 AX6 验证（sysupgrade 或 factory/uboot）；或继续其它设备适配。
+> **Blocker**：无。
 
 ---
 
@@ -14,7 +14,7 @@
 - 系统：Ubuntu 24.04.1 / x86_64 / 8 核 / 7.8G 内存（无 swap）/ 114G 可用磁盘
 
 ## 旧 VPS（154.12.50.97，本次 AX9000 构建机）
-- IP：154.12.50.97（root / gijhJMZL8097 / 22）
+- IP：154.12.50.97（root / mlspFSJF7535 / 22；阶段AX6 已在此机编译 Redmi AX6）
 - 系统：Ubuntu 22.04 / x86_64 / 8 核 / 7.8G 内存 / 117G 磁盘（已重装，原 /root/ax6-build 数据已不存在）
 - 本次用于编译 Xiaomi AX9000（构建根 /root/q30-build，源码树 /root/q30-build/openwrt）
 
@@ -89,6 +89,21 @@
 - QCN9074 根因：files/ 覆盖在 ipq-wifi 包的 install-overlay 之前被覆盖，board-2.bin 没生效；改为 /etc/ax9000/qcn9074-board-2.bin + uci-defaults 首启覆盖并 rmmod/modprobe ath11k_pci。
 - 160MHz 根因：CN 法规域 5.2G(36-144) 全 NO_IR、5.8G(149-165) 仅 80MHz，160MHz 在 CN 不可用；改用 country=US + HE160 channel 100(DFS)。
 
+## 阶段AX6 Redmi AX6 定制（2026-08-22 完成）
+- 构建机：154.12.50.97（root/mlspFSJF7535/22，Ubuntu 24.04，8核/7.8G+8G swap，已装依赖），构建根 /root/q30-build。
+- 使用 configs/ax6/ 骨架 + docs/BUILD-GUIDE.md；目标 qualcommax/ipq807x，设备 redmi_ax6。
+- 需求落地：argon 主题、passwall、openclash（内置 clash_meta、core_version=linux-arm64、auto_update/update=0 锁定）、默认关 IPv6、5G AA_5G/asd12345（2.4G 禁用）、后台 192.168.100.1、openclash-editor（Visual Editor 2.4.0）、默认 config.yaml（rainbowgag/clash-）。
+- 关键修复（已落盘）：
+  1) configs/ax6/apply-custom.sh 修正共享 files 复制（补 mkdir -p）并选择性复制（不含 nginx/jcg-wifi）。
+  2) 04-stock.patch 的 platform.sh hunk 因上游新增 CI_DATA_UBIPART 冲突 → scripts/patch-ax6-platformsh.py 幂等修复为 A/B 双分区；build-ax6.sh 步骤7容忍该 hunk 失败。
+  3) qosify 在 25.12 编译失败（本项目不需要）→ apply-custom.sh 禁用。
+  4) ruby 的 RUBY_ENABLE_YJIT=y 会触发 rust/host 的 LLVM/rustc 超长构建（编辑器只需纯 ruby）→ apply-custom.sh 禁用 YJIT。
+- 产物（firmware/ax6-20260822-1731/）：
+  - sysupgrade 56.8MB：kwrt-qualcommax-ipq807x-redmi_ax6-squashfs-sysupgrade.bin
+  - factory 58.9MB：kwrt-qualcommax-ipq807x-redmi_ax6-squashfs-factory.ubi
+  - initramfs：kwrt-qualcommax-ipq807x-redmi_ax6-initramfs-factory.ubi / -initramfs-uImage.itb
+  - SHA256：sysupgrade=649037e2…db8b，factory=c2d5fe1d…c5df（完整见 sha256sums）
+- 参考机（192.168.100.1，root/root）实测：radio0=5G(QCN5054,HE160)、radio1=2.4G(QCA9887,HE40)；mtd8=art；rootfs 双分区(A/B)。
 ## 最近完成
 - [2026-08-22] 阶段9b：有线改 QSGMII(switch_mac_mode=0xb)、QCN9074 board 改 uci-defaults 覆盖+重载、5G 160MHz 改 US 国家码，产物 firmware/ax9000-20260822-1413/。
 - [2026-08-22] 阶段9：AX9000 修复六项问题并重编译（有线QCA8075 PHY package、QCN9074 board去variant、三频SSID/160MHz按band+path、opkg去kwrt_core、USB存储包），产物 firmware/ax9000-20260822-1224/。
@@ -113,4 +128,5 @@
 
 - [2026-08-22] 阶段9c：有线 phy-mode 修复+独立MAC userspace 脚本，QCN9074 raw board.bin 三频回退，三频 160MHz 路径重排，产物 firmware/ax9000-20260822-161456/。
 
+- [2026-08-22] 阶段AX6：Redmi AX6 定制编译成功（argon/passwall/openclash meta+editor，5G AA_5G，关IPv6，后台192.168.100.1），产物 firmware/ax6-20260822-1731/。
 - [2026-08-22] 阶段9d：WAN QCA8081 补 reset-deassert-us=10000 重编译，产物 firmware/ax9000-20260822-171557/。

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# 修复 AX9000 DTS：
+# 修复 AX9000 DTS（幂等）：
 # 1) 把 QCA8075 的 4 个 PHY 节点包进 ethernet-phy-package(qcom,qca8075-package)。
 # 2) 加 qcom,package-mode="qsgmii"（AX9000 的 switch_mac_mode=0xb=MAC_MODE_QSGMII，必须匹配）。
+# 3) 给 dp1..dp4 补 phy-mode="qsgmii"、dp5 补 phy-mode="sgmii"（上游 DTS 有，Kwrt 覆盖版漏掉，导致有线只发不收）。
+# 4) 删除底部对 dp1..dp5 nvmem-cells/nvmem-cell-names 的删除语句，恢复各网口独立 MAC（否则全部复用同一 MAC，电脑无法拿到地址/进后台）。
 import io, sys
 
 path = sys.argv[1] if len(sys.argv) > 1 else \
@@ -9,6 +11,7 @@ path = sys.argv[1] if len(sys.argv) > 1 else \
 
 s = io.open(path, encoding='utf-8').read()
 
+# --- 1/2) PHY package 包裹 ---
 old = ('\tqca8075_0: ethernet-phy@0 {\n'
        '\t\tcompatible = "ethernet-phy-ieee802.3-c22";\n'
        '\t\treg = <0>;\n'
@@ -57,14 +60,30 @@ new = ('\tethernet-phy-package@0 {\n'
        '\t\t};\n'
        '\t};\n')
 
-if new in s:
-    print('ALREADY PATCHED(full): %s' % path)
-    sys.exit(0)
+if new not in s:
+    if old in s:
+        s = s.replace(old, new, 1)
+    elif 'compatible = "qcom,qca8075-package";' in s and 'qcom,package-mode' not in s:
+        s = s.replace('compatible = "qcom,qca8075-package";',
+                      'compatible = "qcom,qca8075-package";\n\t\tqcom,package-mode = "qsgmii";', 1)
 
-if old not in s:
-    print('OLD DTS BLOCK NOT FOUND: %s' % path, file=sys.stderr)
-    sys.exit(1)
+# --- 3) dp1..dp4 phy-mode=qsgmii, dp5 phy-mode=sgmii ---
+for label, mode in [('dp1','qsgmii'),('dp2','qsgmii'),('dp3','qsgmii'),('dp4','qsgmii'),('dp5','sgmii')]:
+    node = '&%s {\n\tstatus = "okay";\n' % label
+    if node not in s:
+        continue
+    if ('\tphy-mode = "%s";\n' % mode) in s:
+        continue
+    s = s.replace(node, node + '\tphy-mode = "%s";\n' % mode, 1)
 
-s = s.replace(old, new, 1)
+# --- 4) 删除底部 dp1..dp5 的 nvmem 删除语句，恢复独立 MAC ---
+for label in ['dp1','dp2','dp3','dp4','dp5']:
+    block = ('&%s {\n'
+             '\t/delete-property/ nvmem-cells;\n'
+             '\t/delete-property/ nvmem-cell-names;\n'
+             '};\n') % label
+    if block in s:
+        s = s.replace(block, '', 1)
+
 io.open(path, 'w', encoding='utf-8').write(s)
-print('PATCHED DTS(qsgmii): %s' % path)
+print('PATCHED DTS(qsgmii+phy-mode+mac): %s' % path)

@@ -1,10 +1,17 @@
 #!/bin/sh
 # QCN9074(5G 游戏频) board 数据修复：
-# files/ 覆盖会被 ipq-wifi 包的 install-overlay 覆盖，因此首启时在此覆盖并重载 ath11k_pci。
+# 1) board-2.bin（API2，无 variant 条目）与 board.bin（API1，raw board 数据）都要存在。
+# 2) ipq-wifi 包的 install-overlay 会覆盖 board-2.bin，而 files 覆盖在它之前被覆盖，
+#    因此在首启时从 /etc/ax9000 复制两份校准文件，并重载 ath11k_pci。
+# 3) board.bin 已随 files 直接打进 rootfs（不会被 install-overlay 覆盖），作为 API1 回退更稳。
 [ -f /etc/ax9000/qcn9074-board-2.bin ] || exit 0
 
+mkdir -p /lib/firmware/ath11k/QCN9074/hw1.0
 cp -f /etc/ax9000/qcn9074-board-2.bin /lib/firmware/ath11k/QCN9074/hw1.0/board-2.bin
+cp -f /etc/ax9000/qcn9074-board.bin /lib/firmware/ath11k/QCN9074/hw1.0/board.bin 2>/dev/null || true
 
 ( rmmod ath11k_pci 2>/dev/null; sleep 1; modprobe ath11k_pci 2>/dev/null ) &
 
+# 只执行一次
+rm -f /etc/uci-defaults/zz-fix-qcn9074-board
 exit 0

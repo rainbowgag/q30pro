@@ -1,0 +1,56 @@
+#!/bin/sh
+# AX9000 各网口独立 MAC：bootloader aliases 只给了一个 MAC，导致 LAN 全部复用同一地址。
+# 这里从 0:art 分区读取真实 MAC 表（dp1..dp5 各 6 字节），并分别写到 lan1..lan4 / wan / br-lan。
+# 若读不到 ART，则退回当前 br-lan MAC 并按端口偏移递增，保证有线网卡能正常拿到 DHCP。
+
+base=""
+for mtd in /dev/mtd*; do
+    [ -e "$mtd" ] || continue
+    [ "$(cat /sys/class/mtd/${mtd##*/}/name 2>/dev/null)" = "0:art" ] || continue
+    raw=$(dd if="$mtd" bs=1 skip=0 count=30 2>/dev/null | hexdump -v -e '1/1 "%02x"')
+    [ -n "$raw" ] && base="${raw}"
+    break
+done
+
+hex2mac() {
+    # 输入 12 位 hex，输出 aa:bb:cc:dd:ee:ff
+    h="$1"
+    echo "${h:0:2}:${h:2:2}:${h:4:2}:${h:6:2}:${h:8:2}:${h:10:2}"
+}
+
+mac_add() {
+    # 对 MAC 加一个整数（mod 2^48）
+    mac="$1"; off="$2"
+    h=$(echo "$mac" | tr -d ':')
+    dec=$(( 0x$h + off ))
+    printf '%012x' "$dec" | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4:\5:\6/'
+}
+
+# 若 ART 读取成功：dp1=lan4, dp2=lan3, dp3=lan2, dp4=lan1, dp5=wan
+if [ -n "$base" ]; then
+    m_dp1=$(hex2mac "${base:0:12}")
+    m_dp2=$(hex2mac "${base:12:12}")
+    m_dp3=$(hex2mac "${base:24:12}")
+    m_dp4=$(hex2mac "${base:36:12}")
+    m_dp5=$(hex2mac "${base:48:12}")
+else
+    br=$(cat /sys/class/net/br-lan/address 2>/dev/null)
+    [ -n "$br" ] || br="c8:bf:4c:78:00:2f"
+    m_dp1=$(mac_add "$br" 0)
+    m_dp2=$(mac_add "$br" 1)
+    m_dp3=$(mac_add "$br" 2)
+    m_dp4=$(mac_add "$br" 3)
+    m_dp5=$(mac_add "$br" 4)
+fi
+
+# lan4=dp1, lan3=dp2, lan2=dp3, lan1=dp4, wan=dp5
+for pair in "lan4:$m_dp1" "lan3:$m_dp2" "lan2:$m_dp3" "lan1:$m_dp4" "wan:$m_dp5"; do
+    iface="${pair%%:*}"; mac="${pair#*:}"
+    [ -d "/sys/class/net/$iface" ] && ip link set dev "$iface" address "$mac" 2>/dev/null
+done
+
+# br-lan 用 lan1(dp4) 的 MAC
+[ -d /sys/class/net/br-lan ] && ip link set dev br-lan address "$m_dp4" 2>/dev/null
+
+rm -f /etc/uci-defaults/98-ax9000-mac
+exit 0

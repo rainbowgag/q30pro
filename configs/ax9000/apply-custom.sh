@@ -34,7 +34,8 @@ cp -f ../configs/files/etc/nginx/conf.d/30-ncsi.locations files/etc/nginx/conf.d
 # 3.2 AX9000 专属
 cp -r ../configs/ax9000/files/. files/
 
-chmod +x files/etc/uci-defaults/99-ax9000-defaults \
+chmod +x files/etc/uci-defaults/98-ax9000-mac \
+        files/etc/uci-defaults/99-ax9000-defaults \
         files/etc/uci-defaults/zz-fix-distfeeds \
         files/etc/uci-defaults/zz-fix-qcn9074-board \
         files/etc/hotplug.d/ieee80211/30-ax9000-wifi

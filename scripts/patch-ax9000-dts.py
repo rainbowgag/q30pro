@@ -3,7 +3,7 @@
 # 1) 把 QCA8075 的 4 个 PHY 节点包进 ethernet-phy-package(qcom,qca8075-package)。
 # 2) 加 qcom,package-mode="qsgmii"（AX9000 的 switch_mac_mode=0xb=MAC_MODE_QSGMII，必须匹配）。
 # 3) 给 dp1..dp4 补 phy-mode="qsgmii"、dp5 补 phy-mode="sgmii"（上游 DTS 有，Kwrt 覆盖版漏掉，导致有线只发不收）。
-# 4) 删除底部对 dp1..dp5 nvmem-cells/nvmem-cell-names 的删除语句，恢复各网口独立 MAC（否则全部复用同一 MAC，电脑无法拿到地址/进后台）。
+
 import io, sys
 
 path = sys.argv[1] if len(sys.argv) > 1 else \
@@ -84,15 +84,6 @@ for label, mode in [('dp1','qsgmii'),('dp2','qsgmii'),('dp3','qsgmii'),('dp4','q
         continue
     ins = aidx + len(anchor)
     s = s[:ins] + '\tphy-mode = "%s";\n' % mode + s[ins:]
-
-# --- 4) 删除底部 dp1..dp5 的 nvmem 删除语句，恢复独立 MAC ---
-for label in ['dp1','dp2','dp3','dp4','dp5']:
-    block = ('&%s {\n'
-             '\t/delete-property/ nvmem-cells;\n'
-             '\t/delete-property/ nvmem-cell-names;\n'
-             '};\n') % label
-    if block in s:
-        s = s.replace(block, '', 1)
 
 io.open(path, 'w', encoding='utf-8').write(s)
 print('PATCHED DTS(qsgmii+phy-mode+mac): %s' % path)

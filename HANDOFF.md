@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段9：AX9000 六项问题修复并重编译完成（有线 QCA8075 / QCN9074 三频 / SSID+160MHz / opkg 源 / USB 存储），产物已下载。
-> **Next**：刷写验证新固件（sysupgrade.bin 走 LuCI，不保留配置）。
+> **Stopped here**：阶段9b：修复有线(QCA8075 QSGMII)、QCN9074 board 覆盖(uci-defaults)、5G 160MHz(US)并重编译，产物已下载。
+> **Next**：刷写验证新固件（firmware/ax9000-20260822-1413/，不保留配置）。
 > **Blocker**：无。
 
 ---
@@ -84,7 +84,13 @@
 - USB3.0：custom.config 加 kmod-usb-storage/uas、kmod-fs-vfat/exfat/ntfs3、usbutils。
 - 遗留：QCA9887(168c:0050, ath10k PCIe) 仍缺 caldata（非三频必需，未处理）。
 
+## 阶段9b 深挖结论（2026-08-22）
+- 有线根因：Kwrt 的 devices/qualcommax_ipq807x/diy 自定义 DTS 覆盖上游 DTS，且缺 ethernet-phy-package+qcom,package-mode；而 switch_mac_mode=0xb=MAC_MODE_QSGMII，qca807x 驱动默认 PSGMII 不匹配 → 只发不收。补丁加 qcom,package-mode="qsgmii"。
+- QCN9074 根因：files/ 覆盖在 ipq-wifi 包的 install-overlay 之前被覆盖，board-2.bin 没生效；改为 /etc/ax9000/qcn9074-board-2.bin + uci-defaults 首启覆盖并 rmmod/modprobe ath11k_pci。
+- 160MHz 根因：CN 法规域 5.2G(36-144) 全 NO_IR、5.8G(149-165) 仅 80MHz，160MHz 在 CN 不可用；改用 country=US + HE160 channel 100(DFS)。
+
 ## 最近完成
+- [2026-08-22] 阶段9b：有线改 QSGMII(switch_mac_mode=0xb)、QCN9074 board 改 uci-defaults 覆盖+重载、5G 160MHz 改 US 国家码，产物 firmware/ax9000-20260822-1413/。
 - [2026-08-22] 阶段9：AX9000 修复六项问题并重编译（有线QCA8075 PHY package、QCN9074 board去variant、三频SSID/160MHz按band+path、opkg去kwrt_core、USB存储包），产物 firmware/ax9000-20260822-1224/。
 - [2026-08-22] 阶段8：Xiaomi AX9000 固件编译成功（qualcommax/ipq807x，无 openclash，argon+passwall+luci-nginx），产物本地 firmware/ax9000-20260822-0301/。
 - [2026-08-20] 阶段5：按新需求重编译完整版（+openclash-editor +config.yaml +锁定），已校验 rootfs 内容并下载到本地。

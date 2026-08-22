@@ -1,8 +1,8 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段9c：有线补 phy-mode(qsgmii/sgmii)+独立MAC(userspace 98-ax9000-mac)，QCN9074 raw board.bin(API1 回退) 已验证可让三频 phy 注册，三频 160MHz 按 radio 路径重排，编译完成。
-> **Next**：刷写验证 firmware/ax9000-20260822-161456/（sysupgrade 不保留配置）→ 电脑网线 DHCP 进 192.168.100.1、三频、160MHz。
-> **Blocker**：GitHub push 被墙（重试中）；路由在线 rmmod 后需断电重启一次。
+> **Stopped here**：阶段9d：WAN QCA8081 无链路，给 qca8081 补 reset-deassert-us=10000 并重编译（firmware/ax9000-20260822-171557/）。
+> **Next**：刷写验证 WAN 2.5G 是否自动 link；若仍 NO-CARRIER，再查 qca8081/SSDK 的 2.5G 配置。
+> **Blocker**：无（GitHub 已恢复）。
 
 ---
 
@@ -112,3 +112,5 @@
 - [2026-08-22] 阶段9c：有线补 phy-mode(qsgmii/sgmii)+恢复独立 MAC，QCN9074 加 raw board.bin API1 回退，三频 160MHz 按 radio 路径重排，开始重编译。
 
 - [2026-08-22] 阶段9c：有线 phy-mode 修复+独立MAC userspace 脚本，QCN9074 raw board.bin 三频回退，三频 160MHz 路径重排，产物 firmware/ax9000-20260822-161456/。
+
+- [2026-08-22] 阶段9d：WAN QCA8081 补 reset-deassert-us=10000 重编译，产物 firmware/ax9000-20260822-171557/。

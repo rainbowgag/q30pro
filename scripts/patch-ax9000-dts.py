@@ -85,5 +85,19 @@ for label, mode in [('dp1','qsgmii'),('dp2','qsgmii'),('dp3','qsgmii'),('dp4','q
     ins = aidx + len(anchor)
     s = s[:ins] + '\tphy-mode = "%s";\n' % mode + s[ins:]
 
+
+# --- qca8081 reset-deassert-us ---
+qca8081_head = 'qca8081: ethernet-phy@24 {'
+qi = s.find(qca8081_head)
+if qi != -1:
+    qblock_end = s.find('\n\t};', qi)
+    qblock = s[qi:qblock_end + 4] if qblock_end != -1 else s[qi:qi+200]
+    if 'reset-deassert-us' not in qblock:
+        anchor = '\treg = <24>;\n'
+        ai = s.find(anchor, qi)
+        if ai != -1:
+            ins = ai + len(anchor)
+            s = s[:ins] + '\treset-deassert-us = <10000>;\n' + s[ins:]
+
 io.open(path, 'w', encoding='utf-8').write(s)
 print('PATCHED DTS(qsgmii+phy-mode+mac): %s' % path)

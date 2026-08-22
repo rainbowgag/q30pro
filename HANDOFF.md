@@ -1,7 +1,7 @@
 # HANDOFF.md — 交接记录
 
-> **Stopped here**：阶段8：Xiaomi AX9000 固件编译成功（qualcommax/ipq807x，无 openclash，argon+passwall+luci-nginx），产物已下载到本地。
-> **Next**：可刷写验证 AX9000（factory.ubi 走 uboot / sysupgrade.bin 走 LuCI）。
+> **Stopped here**：阶段9：AX9000 六项问题修复并重编译完成（有线 QCA8075 / QCN9074 三频 / SSID+160MHz / opkg 源 / USB 存储），产物已下载。
+> **Next**：刷写验证新固件（sysupgrade.bin 走 LuCI，不保留配置）。
 > **Blocker**：无。
 
 ---
@@ -76,7 +76,16 @@
 0 初始化（完成）→ 1 VPS 环境（完成）→ 2 设备采集/分区确认（完成）→ 3 定制配置（完成）
 → 4 首次编译（完成）→ 5 刷写验证（进行中）→ 6 锁定更新 → 7 收尾交付
 
+## 阶段9 AX9000 修复（2026-08-22）
+- 有线不通：DTS 缺 ethernet-phy-package(qcom,qca8075-package)，qca807x PHY probe -EINVAL → scripts/patch-ax9000-dts.py 包裹 4 个 QCA8075 PHY。
+- 三频缺失：QCN9074 PCIe bdf_search 读不到 variant，board-2.bin 条目带 variant 名不匹配 → 去掉 variant 名（configs/ax9000/files/lib/firmware/.../board-2.bin，.gitignore 例外）。
+- SSID 错位/无 160M：改为按 band+path 识别（2.4G=AA_2.4G/5G主频=AA_5G HE160/5G游戏=AA_5G_Game HE160）。
+- opkg 报错：distfeeds 的 kwrt_core(6.12.103) 在 dl.openwrt.ai 不存在 → zz-fix-distfeeds 去掉该 feed。
+- USB3.0：custom.config 加 kmod-usb-storage/uas、kmod-fs-vfat/exfat/ntfs3、usbutils。
+- 遗留：QCA9887(168c:0050, ath10k PCIe) 仍缺 caldata（非三频必需，未处理）。
+
 ## 最近完成
+- [2026-08-22] 阶段9：AX9000 修复六项问题并重编译（有线QCA8075 PHY package、QCN9074 board去variant、三频SSID/160MHz按band+path、opkg去kwrt_core、USB存储包），产物 firmware/ax9000-20260822-1224/。
 - [2026-08-22] 阶段8：Xiaomi AX9000 固件编译成功（qualcommax/ipq807x，无 openclash，argon+passwall+luci-nginx），产物本地 firmware/ax9000-20260822-0301/。
 - [2026-08-20] 阶段5：按新需求重编译完整版（+openclash-editor +config.yaml +锁定），已校验 rootfs 内容并下载到本地。
 - [2026-08-20] 阶段5：完成保守重建，最小化镜像确认能启动（用户刷写成功）。

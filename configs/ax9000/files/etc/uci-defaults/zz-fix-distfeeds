@@ -1,0 +1,12 @@
+#!/bin/sh
+# 修复 opkg 软件源：移除不存在的 kwrt_core(kmods) feed（快照内核 6.12.103 在 dl.openwrt.ai 无对应目录），
+# 保留可达的 arch 级 feed，避免 opkg update 出现 Collected errors。
+cat > /etc/opkg/distfeeds.conf <<'EOF'
+src/gz kwrt_base https://dl.openwrt.ai/releases/25.12/packages/aarch64_cortex-a53/base
+src/gz kwrt_packages https://dl.openwrt.ai/releases/25.12/packages/aarch64_cortex-a53/packages
+src/gz kwrt_luci https://dl.openwrt.ai/releases/25.12/packages/aarch64_cortex-a53/luci
+src/gz kwrt_routing https://dl.openwrt.ai/releases/25.12/packages/aarch64_cortex-a53/routing
+src/gz kwrt_video https://dl.openwrt.ai/releases/25.12/packages/aarch64_cortex-a53/video
+src/gz kwrt_kiddin9 https://dl.openwrt.ai/releases/25.12/packages/aarch64_cortex-a53/kiddin9
+EOF
+exit 0

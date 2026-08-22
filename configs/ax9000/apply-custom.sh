@@ -13,8 +13,11 @@ for d in feeds/kiddin9/*/; do
   ln -sfn "../../../feeds/kiddin9/$name" "package/feeds/kiddin9/$name"
 done
 
-# 1) 修复 Kwrt 04-stock.patch 对 platform.sh 的 hunk 冲突（上游新增 CI_DATA_UBIPART 行），应用 A/B 双分区升级逻辑（幂等）
+# 1) 修复 Kwrt 04-stock.patch 对 platform.sh 的 hunk 冲突，应用 A/B 双分区升级逻辑（幂等）
 python3 ../scripts/patch-ax9000-platformsh.py target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
+
+# 1b) 修复 QCA8075 PHY package：把 4 个 PHY 包进 ethernet-phy-package（幂等）
+python3 ../scripts/patch-ax9000-dts.py target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8072-ax9000.dts
 
 # 2) 追加 .config
 echo >> .config
@@ -32,6 +35,7 @@ cp -f ../configs/files/etc/nginx/conf.d/30-ncsi.locations files/etc/nginx/conf.d
 cp -r ../configs/ax9000/files/. files/
 
 chmod +x files/etc/uci-defaults/99-ax9000-defaults \
+        files/etc/uci-defaults/zz-fix-distfeeds \
         files/etc/hotplug.d/ieee80211/30-ax9000-wifi
 
 echo "ax9000 apply-custom done"

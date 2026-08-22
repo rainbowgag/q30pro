@@ -1,5 +1,6 @@
 #!/bin/sh
-# Xiaomi AX9000 三频无线默认设置：在 Kwrt 的 10-wifi-detect 之后重新应用
+# Xiaomi AX9000 三频无线默认设置：在 Kwrt 的 10-wifi-detect 生成无线配置后，按 band+path 重新应用。
+# 三频：2.4G(AA_2.4G) / 5G 主频(AA_5G,160M) / 5G 游戏频(AA_5G_Game)。密码 asd12345。
 [ "${ACTION}" = "add" ] || exit 0
 
 (
@@ -8,21 +9,35 @@
         sleep 1
     done
 
-    for r in radio0 radio1 radio2; do
-      uci set wireless.$r.disabled='0'
+    for radio in radio0 radio1 radio2; do
+        band="$(uci -q get wireless.$radio.band)" || continue
+        path="$(uci -q get wireless.$radio.path)"
+
+        case "$band" in
+            2g)
+                ssid="AA_2.4G"; htmode="HE20"; channel="auto"
+                ;;
+            5g)
+                if echo "$path" | grep -q "c000000.wifi"; then
+                    ssid="AA_5G"; htmode="HE160"; channel="36"
+                else
+                    ssid="AA_5G_Game"; htmode="HE160"; channel="100"
+                fi
+                ;;
+            *)
+                continue
+                ;;
+        esac
+
+        uci set wireless.$radio.disabled='0'
+        uci set wireless.$radio.htmode="$htmode"
+        uci set wireless.$radio.channel="$channel"
+        uci set wireless.default_$radio.ssid="$ssid"
+        uci set wireless.default_$radio.encryption='psk2'
+        uci set wireless.default_$radio.key='asd12345'
+        uci set wireless.default_$radio.disabled='0'
     done
-    uci set wireless.default_radio0.disabled='0'
-    uci set wireless.default_radio1.disabled='0'
-    uci set wireless.default_radio2.disabled='0'
-    uci set wireless.default_radio0.ssid='AA_2.4G'
-    uci set wireless.default_radio0.encryption='psk2'
-    uci set wireless.default_radio0.key='asd12345'
-    uci set wireless.default_radio1.ssid='AA_5G'
-    uci set wireless.default_radio1.encryption='psk2'
-    uci set wireless.default_radio1.key='asd12345'
-    uci set wireless.default_radio2.ssid='AA_5G_Game'
-    uci set wireless.default_radio2.encryption='psk2'
-    uci set wireless.default_radio2.key='asd12345'
+
     uci commit wireless
     /sbin/wifi up
 ) &

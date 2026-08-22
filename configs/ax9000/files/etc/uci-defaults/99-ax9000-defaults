@@ -1,6 +1,5 @@
 #!/bin/sh
-# Xiaomi AX9000 首次启动：LAN / 关闭 IPv6 / 三频 WiFi / NCSI
-# TODO: 按需修改 IP、SSID、密码
+# Xiaomi AX9000 首次启动：LAN / 关闭 IPv6 / NCSI。无线由 30-ax9000-wifi 热插拔脚本按 band+path 配置。
 
 # LAN 地址（list 语法，带 /24）
 uci -q del network.lan.ipaddr
@@ -13,23 +12,6 @@ uci -q delete network.globals.ula_prefix
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ra='disabled'
 uci set dhcp.lan.ndp='disabled'
-
-# WiFi：三频启用（AX9000 是 radio0=2.4G, radio1=5G, radio2=5G游戏）
-for r in radio0 radio1 radio2; do
-  uci set wireless.$r.disabled='0'
-done
-uci set wireless.default_radio0.disabled='0'
-uci set wireless.default_radio1.disabled='0'
-uci set wireless.default_radio2.disabled='0'
-uci set wireless.default_radio0.ssid='AA_2.4G'
-uci set wireless.default_radio0.encryption='psk2'
-uci set wireless.default_radio0.key='asd12345'
-uci set wireless.default_radio1.ssid='AA_5G'
-uci set wireless.default_radio1.encryption='psk2'
-uci set wireless.default_radio1.key='asd12345'
-uci set wireless.default_radio2.ssid='AA_5G_Game'
-uci set wireless.default_radio2.encryption='psk2'
-uci set wireless.default_radio2.key='asd12345'
 
 # Windows NCSI 联网检测
 uci add_list dhcp.@dnsmasq[0].address='/www.msftconnecttest.com/192.168.100.1'
